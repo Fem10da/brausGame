@@ -189,16 +189,7 @@ class PronunciationQuest {
 
     initializeGame() {
         // Initialize Web Speech API
-        this.recognition = null;
         this.synthesis = window.speechSynthesis;
-        
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            this.recognition = new SpeechRecognition();
-            this.recognition.continuous = false;
-            this.recognition.interimResults = false;
-            this.recognition.lang = 'en-GB';
-        }
 
         // Load saved progress
         this.loadProgress();
@@ -221,13 +212,6 @@ class PronunciationQuest {
 
         // Next button
         document.getElementById('next-btn').addEventListener('click', () => this.nextWord());
-
-        // Voice recording
-        if (this.recognition) {
-            document.getElementById('record-btn').addEventListener('click', () => this.toggleRecording());
-            this.recognition.onresult = (event) => this.handleSpeechResult(event);
-            this.recognition.onerror = (event) => this.handleSpeechError(event);
-        }
         
         // Mode switching
         document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -293,8 +277,8 @@ class PronunciationQuest {
     displayWord() {
         const wordDisplay = document.getElementById('word-display');
         const taskType = document.getElementById('task-type');
-        const voiceInput = document.getElementById('voice-input');
         const wordCategory = document.getElementById('word-category');
+        const voiceInput = document.getElementById('voice-input');
 
         wordDisplay.textContent = this.currentWord.word;
         
@@ -309,20 +293,22 @@ class PronunciationQuest {
         switch (this.currentTaskType) {
             case 'transcription':
                 taskType.textContent = 'Оберіть правильну транскрипцію';
-                voiceInput.style.display = 'none';
+                if (voiceInput) voiceInput.style.display = 'none';
                 break;
             case 'stress':
                 taskType.textContent = 'Який склад наголошений?';
-                voiceInput.style.display = 'none';
+                if (voiceInput) voiceInput.style.display = 'none';
                 break;
             case 'sound-sorting':
                 taskType.textContent = 'До якої групи звуків належить це слово?';
-                voiceInput.style.display = 'none';
+                if (voiceInput) voiceInput.style.display = 'none';
                 break;
         }
 
         // Підготовка аудіо (завжди)
         this.synthesizeAudio();
+        
+        console.log("Task type:", this.currentTaskType);
     }
 
     synthesizeAudio() {
@@ -398,6 +384,8 @@ class PronunciationQuest {
                 break;
         }
 
+        console.log("Generated options:", options);
+
         options.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'option-btn';
@@ -412,55 +400,138 @@ class PronunciationQuest {
         const correct = this.currentWord.transcription;
         const options = [{ text: correct, correct: true }];
 
+        console.log("Генерація опцій транскрипції для слова:", this.currentWord.word);
+        
         // Generate incorrect options
-        const incorrectOptions = [
+        let incorrectOptions = [
             correct.replace(/ˈ/g, 'ˌ'), // Wrong stress
             correct.replace(/ː/g, ''), // Remove long vowels
             correct.replace(/ə/g, 'e'), // Replace schwa
-            correct.replace(/ɒ/g, 'ɔː') // Different vowel sounds
+            correct.replace(/ɒ/g, 'ɔː'), // Different vowel sounds
+            correct.replace(/æ/g, 'ɑː'), // Another vowel replacement
+            correct.replace(/ɪ/g, 'i'), // Short to normal i
+            correct.replace(/ʊ/g, 'u') // Short to normal u
         ].filter(opt => opt !== correct && opt.length > 0);
 
-        // Add some of the incorrect options
-        incorrectOptions.slice(0, 3).forEach(opt => {
+        console.log("Згенеровано некоректних опцій:", incorrectOptions.length);
+        
+        // Якщо недостатньо некоректних варіантів, додаємо ще деякі модифікації
+        if (incorrectOptions.length < 3) {
+            const additionalOptions = [
+                '/' + correct.slice(1).replace(/ə/g, 'a'),
+                '/' + correct.slice(1).replace(/ː/g, '').replace(/ʃ/g, 's'),
+                '/' + correct.slice(1).replace(/ʊ/g, 'u').replace(/ɪ/g, 'i')
+            ].filter(opt => opt !== correct && !incorrectOptions.includes(opt));
+            
+            incorrectOptions = [...incorrectOptions, ...additionalOptions];
+            console.log("Додано додаткових опцій:", additionalOptions.length);
+        }
+
+        // Add some of the incorrect options (щонайменше 2, якщо доступно)
+        const optionsToAdd = Math.min(3, incorrectOptions.length);
+        incorrectOptions.slice(0, optionsToAdd).forEach(opt => {
             options.push({ text: opt, correct: false });
         });
+        
+        // Якщо у нас все ще недостатньо опцій, додаємо "зовсім неправильний" варіант
+        if (options.length < 2) {
+            options.push({ 
+                text: '/ʌnˈnəʊn/',
+                correct: false 
+            });
+            console.warn("Додано запасний варіант через недостатню кількість опцій");
+        }
+        
+        console.log("Загальна кількість опцій перед перемішуванням:", options.length);
 
         return this.shuffleArray(options);
     }
 
     generateStressOptions() {
-        const syllables = this.currentWord.word.match(/[aeiouy]+/gi) || [];
+        console.log("Генерація опцій наголосу для слова:", this.currentWord.word);
+        
+        // Спробуємо виділити склади за допомогою регулярного виразу
+        let syllables = this.currentWord.word.match(/[aeiouy]+[^aeiouy]*/gi) || [];
+        
+        console.log("Виявлено складів:", syllables.length);
+        
+        // Якщо не вдалося визначити склади, використовуємо альтернативний підхід
+        if (syllables.length === 0) {
+            // Просто рахуємо голосні як наближення до кількості складів
+            const vowels = this.currentWord.word.match(/[aeiouy]/gi) || [];
+            const vowelCount = vowels.length;
+            
+            console.log("Використання альтернативного підходу. Кількість голосних:", vowelCount);
+            
+            // Генеруємо фіктивні склади на основі кількості голосних
+            for (let i = 0; i < vowelCount; i++) {
+                syllables.push(`склад-${i+1}`);
+            }
+        }
+        
+        // Забезпечуємо мінімум 2 склади для вибору
+        if (syllables.length < 2) {
+            syllables.push("додатковий-склад");
+            console.warn("Додано фіктивний склад для забезпечення варіантів");
+        }
+        
         const options = [];
-
-        for (let i = 0; i < syllables.length && i < 4; i++) {
+        
+        // Обмежуємо до 4 складів максимум
+        const maxSyllables = Math.min(syllables.length, 4);
+        
+        for (let i = 0; i < maxSyllables; i++) {
             options.push({
                 text: `${i + 1}-й склад`,
                 correct: i + 1 === this.currentWord.stress
             });
         }
-
+        
+        console.log("Згенеровано опцій наголосу:", options.length);
+        
         return options;
     }
 
     generateSoundOptions() {
-        const vowelSounds = ['Короткі голосні (/ɪ/, /e/, /æ/)', 'Довгі голосні (/iː/, /ɑː/, /ɔː/)', 'Дифтонги (/eɪ/, /aɪ/, /ɔɪ/)', 'Центральні звуки (/ə/, /ɜː/)'];
+        console.log("Генерація опцій звуків для слова:", this.currentWord.word);
+        
+        const vowelSounds = [
+            'Короткі голосні (/ɪ/, /e/, /æ/)',
+            'Довгі голосні (/iː/, /ɑː/, /ɔː/)',
+            'Дифтонги (/eɪ/, /aɪ/, /ɔɪ/)',
+            'Центральні звуки (/ə/, /ɜː/)'
+        ];
         
         // Simple categorization based on transcription
         let correctCategory = 0;
         const transcription = this.currentWord.transcription;
         
-        if (transcription.includes('iː') || transcription.includes('ɑː') || transcription.includes('ɔː')) {
-            correctCategory = 1;
-        } else if (transcription.includes('eɪ') || transcription.includes('aɪ') || transcription.includes('ɔɪ')) {
-            correctCategory = 2;
+        console.log("Транскрипція слова:", transcription);
+        
+        if (transcription.includes('iː') || transcription.includes('ɑː') || transcription.includes('ɔː') || 
+            transcription.includes('uː') || transcription.includes('ɜː')) {
+            correctCategory = 1; // Довгі голосні
+        } else if (transcription.includes('eɪ') || transcription.includes('aɪ') || transcription.includes('ɔɪ') || 
+                   transcription.includes('əʊ') || transcription.includes('aʊ') || transcription.includes('ɪə') || 
+                   transcription.includes('eə') || transcription.includes('ʊə')) {
+            correctCategory = 2; // Дифтонги
         } else if (transcription.includes('ə') || transcription.includes('ɜː')) {
-            correctCategory = 3;
+            correctCategory = 3; // Центральні звуки
+        } else {
+            // За замовчуванням - короткі голосні
+            correctCategory = 0;
         }
+        
+        console.log("Визначена категорія звуку:", correctCategory);
 
-        return vowelSounds.map((sound, index) => ({
+        const options = vowelSounds.map((sound, index) => ({
             text: sound,
             correct: index === correctCategory
         }));
+        
+        console.log("Згенеровано опцій звуків:", options.length);
+        
+        return options;
     }
 
     selectOption(button) {
@@ -542,82 +613,6 @@ class PronunciationQuest {
         this.loadWord();
     }
 
-    toggleRecording() {
-        if (!this.recognition) return;
-        
-        const recordBtn = document.getElementById('record-btn');
-        
-        if (this.isRecording) {
-            this.recognition.stop();
-            recordBtn.classList.remove('recording');
-            recordBtn.textContent = '🎤 Записати вимову';
-            this.isRecording = false;
-        } else {
-            this.recognition.start();
-            recordBtn.classList.add('recording');
-            recordBtn.textContent = '⏹️ Зупинити запис';
-            this.isRecording = true;
-        }
-    }
-
-    handleSpeechResult(event) {
-        const recordBtn = document.getElementById('record-btn');
-        recordBtn.classList.remove('recording');
-        recordBtn.textContent = '🎤 Записати вимову';
-        this.isRecording = false;
-        
-        const transcript = event.results[0][0].transcript.toLowerCase();
-        const word = this.currentWord.word.toLowerCase();
-        
-        // Simple comparison for now (can be improved with phonetic comparison)
-        const similarity = this.calculateSimilarity(transcript, word);
-        const isCorrect = similarity > 0.7;
-        
-        this.handleAnswer(isCorrect);
-        
-        // Show feedback specific to pronunciation
-        const voiceFeedback = document.getElementById('voice-feedback');
-        voiceFeedback.textContent = `Ви сказали: "${transcript}" (схожість: ${Math.round(similarity * 100)}%)`;
-    }
-
-    handleSpeechError(event) {
-        const recordBtn = document.getElementById('record-btn');
-        recordBtn.classList.remove('recording');
-        recordBtn.textContent = '🎤 Записати вимову';
-        this.isRecording = false;
-        
-        this.showFeedback(false, 'Помилка запису голосу. Спробуйте ще раз.');
-    }
-
-    calculateSimilarity(str1, str2) {
-        // Simple Levenshtein distance implementation
-        const track = Array(str2.length + 1).fill(null).map(() => 
-            Array(str1.length + 1).fill(null));
-        
-        for (let i = 0; i <= str1.length; i += 1) {
-            track[0][i] = i;
-        }
-        
-        for (let j = 0; j <= str2.length; j += 1) {
-            track[j][0] = j;
-        }
-        
-        for (let j = 1; j <= str2.length; j += 1) {
-            for (let i = 1; i <= str1.length; i += 1) {
-                const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-                track[j][i] = Math.min(
-                    track[j][i - 1] + 1, // deletion
-                    track[j - 1][i] + 1, // insertion
-                    track[j - 1][i - 1] + indicator, // substitution
-                );
-            }
-        }
-        
-        const distance = track[str2.length][str1.length];
-        const maxLength = Math.max(str1.length, str2.length);
-        return maxLength > 0 ? 1 - distance / maxLength : 1;
-    }
-
     updateProgress() {
         const progressFill = document.getElementById('progress-fill');
         const words = this.words[this.currentLevel];
@@ -652,16 +647,15 @@ class PronunciationQuest {
             this.unlockAchievement('vowel-master');
         }
         
-        // Додаємо нові досягнення
-        // Ідеальна вимова (5 правильних вимов підряд)
-        if (this.currentTaskType === 'pronunciation' && this.streak >= 5) {
-            this.unlockAchievement('perfect-pronunciation');
-        }
-        
         // Завершення просунутого рівня
         if (this.currentLevel === 'advanced' && 
             this.currentWordIndex === this.words.advanced.length - 1) {
             this.unlockAchievement('advanced-complete');
+        }
+        
+        // Експерт зі слів (20+ правильних відповідей)
+        if (this.correctAnswers >= 20) {
+            this.unlockAchievement('word-expert');
         }
     }
 
@@ -736,11 +730,26 @@ class PronunciationQuest {
     }
 
     shuffleArray(array) {
+        if (!array || !Array.isArray(array) || array.length <= 1) {
+            console.log("Масив порожній або містить лише один елемент:", array);
+            return array || [];
+        }
+        
+        console.log("Перемішування масиву, початковий стан:", JSON.stringify(array));
+        
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
+        
+        console.log("Перемішаний масив:", JSON.stringify(shuffled));
+        
+        // Переконаємося, що у нас є хоча б 2 опції
+        if (shuffled.length < 2) {
+            console.warn("Після перемішування масив має менше 2 елементів!");
+        }
+        
         return shuffled;
     }
 
@@ -827,6 +836,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (voices.length > 0) {
             // Start the game
             window.game = new PronunciationQuest();
+            
+            // Виводимо повідомлення для діагностики проблеми з варіантами
+            console.log("Гру ініціалізовано!");
+            setTimeout(() => {
+                const options = document.getElementById('options');
+                console.log("Варіанти відповіді:", options?.children.length || 0);
+            }, 1000);
         } else {
             // Try again
             setTimeout(loadVoices, 100);
