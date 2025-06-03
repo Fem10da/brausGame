@@ -656,4 +656,218 @@ body {
         width: 80%;
         margin: 0 auto;
     }
+}
+
+/* Стилі для секції скоромовок */
+.tongue-twisters-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    min-height: 500px;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2em;
+    color: #1e3c72;
+    margin-bottom: 15px;
+}
+
+.section-description {
+    text-align: center;
+    color: #7f8c8d;
+    margin-bottom: 30px;
+    font-size: 1.1em;
+}
+
+.twister-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #f9f9f9;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.twister-text {
+    font-size: 1.8em;
+    text-align: center;
+    font-weight: bold;
+    color: #2c3e50;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: rgba(52, 152, 219, 0.1);
+    border-radius: 10px;
+    border-left: 5px solid #3498db;
+    transition: all 0.3s ease;
+}
+
+.twister-text:hover {
+    transform: scale(1.02);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+}
+
+.twister-text.playing {
+    animation: pulse-text 1.5s infinite;
+    color: #3498db;
+    text-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+}
+
+@keyframes pulse-text {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.twister-text .highlight {
+    color: #e74c3c;
+    font-weight: bold;
+    position: relative;
+    animation: highlight-word 0.6s ease;
+}
+
+@keyframes highlight-word {
+    0% { transform: translateY(0); color: #2c3e50; }
+    50% { transform: translateY(-5px); color: #e74c3c; }
+    100% { transform: translateY(0); color: #e74c3c; }
+}
+
+.twister-text .highlight.slow {
+    animation: highlight-word-slow 1.2s ease;
+}
+
+@keyframes highlight-word-slow {
+    0% { transform: translateY(0); color: #2c3e50; }
+    30% { transform: translateY(-5px); color: #e74c3c; }
+    70% { transform: translateY(-5px); color: #e74c3c; }
+    100% { transform: translateY(0); color: #e74c3c; }
+}
+
+.twister-index {
+    text-align: center;
+    color: #7f8c8d;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+}
+
+.twister-controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.twister-btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.twister-btn:hover {
+    background: #2980b9;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+#play-twister-btn {
+    background: #27ae60;
+}
+
+#play-twister-btn:hover {
+    background: #219a52;
+    box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+}
+
+#repeat-twister-btn {
+    background: #f39c12;
+}
+
+#repeat-twister-btn:hover {
+    background: #d58512;
+    box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+}
+
+.twister-tips {
+    background: rgba(41, 128, 185, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.twister-tips h3 {
+    color: #2980b9;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.twister-tips ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.twister-tips li {
+    padding: 8px 0;
+    position: relative;
+    padding-left: 25px;
+    color: #34495e;
+}
+
+.twister-tips li:before {
+    content: "👉";
+    position: absolute;
+    left: 0;
+    top: 7px;
+}
+
+/* Адаптивні стилі для мобільних пристроїв */
+@media (max-width: 768px) {
+    .twister-text {
+        font-size: 1.5em;
+        padding: 15px;
+    }
+    
+    .twister-controls {
+        flex-direction: column;
+    }
+    
+    .twister-btn {
+        width: 100%;
+    }
+}
+
+.twister-speed-control {
+    text-align: center;
+    margin: 20px 0;
+    background: rgba(52, 152, 219, 0.05);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.twister-speed-btn {
+    background: rgba(52, 152, 219, 0.1);
+    border: 2px solid #3498db;
+    color: #3498db;
+    padding: 8px 16px;
+    border-radius: 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.twister-speed-btn.active {
+    background: #3498db;
+    color: white;
+}
+
+.twister-speed-btn:hover:not(.active) {
+    background: rgba(52, 152, 219, 0.2);
 }       

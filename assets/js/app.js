@@ -1,6 +1,7 @@
-// Імпортуємо AudioLoader та PhoneticsZone
+// Імпортуємо AudioLoader, PhoneticsZone та дані скоромовок
 import audioLoader from './audio-loader.js';
 import phoneticsZone from './phonetics-zone.js';
+import tongueTwistersData from './tongue-twisters.js';
 
 class PronunciationQuest {
     constructor() {
@@ -18,6 +19,9 @@ class PronunciationQuest {
         
         // Додаємо прапорець для відстеження завантаження аудіо
         this.isLoadingAudio = false;
+        
+        // Додаємо прапорець для відстеження поточної скоромовки
+        this.currentTongueTwisterIndex = 0;
         
         this.words = {
             beginner: [
@@ -131,12 +135,8 @@ class PronunciationQuest {
             ]
         };
 
-        this.tongueTwitters = [
-            "She sells seashells by the seashore",
-            "Red lorry, yellow lorry",
-            "The sixth sick sheik's sixth sheep's sick",
-            "How much wood would a woodchuck chuck"
-        ];
+        // Використовуємо дані скоромовок з імпортованого модуля
+        this.tongueTwisters = tongueTwistersData;
 
         this.initializeGame();
         this.bindEvents();
@@ -188,12 +188,55 @@ class PronunciationQuest {
     }
 
     initializeGame() {
-        // Initialize Web Speech API
+        // Initialize Web Speech API if available
         this.synthesis = window.speechSynthesis;
+        this.checkSpeechSupport();
 
         // Load saved progress
         this.loadProgress();
         this.updateUI();
+    }
+    
+    // Метод для перевірки підтримки Web Speech API
+    checkSpeechSupport() {
+        console.log("Перевірка підтримки Web Speech API");
+        
+        // Перевіряємо наявність Web Speech API
+        const speechSynthesisSupported = 'speechSynthesis' in window;
+        const speechRecognitionSupported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+        
+        console.log("Підтримка синтезу мовлення:", speechSynthesisSupported);
+        console.log("Підтримка розпізнавання мовлення:", speechRecognitionSupported);
+        
+        // Перевіряємо, чи можемо ми створити новий об'єкт SpeechSynthesisUtterance
+        let utteranceSupported = false;
+        try {
+            const testUtterance = new SpeechSynthesisUtterance("test");
+            utteranceSupported = true;
+            console.log("Підтримка SpeechSynthesisUtterance:", utteranceSupported);
+        } catch (error) {
+            console.error("Помилка створення SpeechSynthesisUtterance:", error);
+            utteranceSupported = false;
+        }
+        
+        // Перевіряємо наявність голосів
+        if (speechSynthesisSupported) {
+            const voices = this.synthesis.getVoices();
+            console.log("Доступні голоси:", voices.length > 0 ? voices.length : "не завантажено");
+            
+            // Якщо голоси не завантажені, додаємо обробник події
+            if (voices.length === 0 && this.synthesis.onvoiceschanged !== undefined) {
+                this.synthesis.onvoiceschanged = () => {
+                    const updatedVoices = this.synthesis.getVoices();
+                    console.log("Голоси завантажено:", updatedVoices.length);
+                };
+            }
+        }
+        
+        // Зберігаємо результати перевірки
+        this.speechSupported = speechSynthesisSupported && utteranceSupported;
+        
+        return this.speechSupported;
     }
 
     bindEvents() {
@@ -810,7 +853,8 @@ class PronunciationQuest {
                 streak: this.streak,
                 achievements: Array.from(this.achievements),
                 correctAnswers: this.correctAnswers,
-                vowelCorrect: this.vowelCorrect
+                vowelCorrect: this.vowelCorrect,
+                currentTongueTwisterIndex: this.currentTongueTwisterIndex // Додаємо індекс поточної скоромовки
             };
             
             localStorage.setItem('pronunciationQuestProgress', JSON.stringify(progress));
@@ -832,6 +876,11 @@ class PronunciationQuest {
                 this.achievements = new Set(progress.achievements || []);
                 this.correctAnswers = progress.correctAnswers || 0;
                 this.vowelCorrect = progress.vowelCorrect || 0;
+                
+                // Завантажуємо індекс скоромовки, якщо він збережений
+                if (progress.currentTongueTwisterIndex !== undefined) {
+                    this.currentTongueTwisterIndex = progress.currentTongueTwisterIndex;
+                }
                 
                 // Update achievements UI
                 this.achievements.forEach(achievementId => {
@@ -874,6 +923,7 @@ class PronunciationQuest {
     switchMode(mode) {
         const gameArea = document.querySelector('.game-area');
         const phoneticsZoneElement = document.getElementById('phonetics-zone');
+        const tongueTwistersSection = document.getElementById('tongue-twisters-section');
         const modeButtons = document.querySelectorAll('.mode-btn');
         
         // Оновлюємо кнопки
@@ -881,9 +931,15 @@ class PronunciationQuest {
             btn.classList.toggle('active', btn.dataset.mode === mode);
         });
         
+        // Ховаємо всі секції спочатку
+        gameArea.style.display = 'none';
+        phoneticsZoneElement.style.display = 'none';
+        if (tongueTwistersSection) {
+            tongueTwistersSection.style.display = 'none';
+        }
+        
         if (mode === 'learn') {
             // Показуємо фонетичну зону
-            gameArea.style.display = 'none';
             phoneticsZoneElement.style.display = 'block';
             
             // Ініціалізуємо фонетичну зону, якщо ще не ініціалізована
@@ -891,10 +947,542 @@ class PronunciationQuest {
                 phoneticsZone.init(phoneticsZoneElement);
                 this.phoneticsZoneInitialized = true;
             }
+        } else if (mode === 'tongue-twisters') {
+            // Показуємо секцію скоромовок
+            if (tongueTwistersSection) {
+                tongueTwistersSection.style.display = 'block';
+                
+                // Ініціалізуємо секцію скоромовок, якщо ще не ініціалізована
+                if (!this.tongueTwistersInitialized) {
+                    this.initTongueTwisters();
+                    this.tongueTwistersInitialized = true;
+                }
+            }
         } else {
-            // Показуємо ігрову зону
+            // Показуємо ігрову зону (режим гри)
             gameArea.style.display = 'block';
-            phoneticsZoneElement.style.display = 'none';
+        }
+    }
+    
+    // Метод для ініціалізації секції скоромовок
+    initTongueTwisters() {
+        console.log("Ініціалізуємо секцію скоромовок");
+        
+        const tongueTwistersSection = document.getElementById('tongue-twisters-section');
+        if (!tongueTwistersSection) {
+            console.error("Елемент tongue-twisters-section не знайдено!");
+            return;
+        }
+        
+        // Отримуємо посилання на елементи інтерфейсу
+        const twisterText = document.getElementById('twister-text');
+        const twisterIndex = document.getElementById('twister-index');
+        const playTwisterBtn = document.getElementById('play-twister-btn');
+        const nextTwisterBtn = document.getElementById('next-twister-btn');
+        const prevTwisterBtn = document.getElementById('prev-twister-btn');
+        const repeatTwisterBtn = document.getElementById('repeat-twister-btn');
+        
+        // Перевіряємо наявність всіх елементів
+        if (!twisterText) console.error("Елемент twister-text не знайдено!");
+        if (!twisterIndex) console.error("Елемент twister-index не знайдено!");
+        if (!playTwisterBtn) console.error("Елемент play-twister-btn не знайдено!");
+        if (!nextTwisterBtn) console.error("Елемент next-twister-btn не знайдено!");
+        if (!prevTwisterBtn) console.error("Елемент prev-twister-btn не знайдено!");
+        if (!repeatTwisterBtn) console.error("Елемент repeat-twister-btn не знайдено!");
+        
+        // Встановлюємо поточну скоромовку
+        this.displayCurrentTongueTwister();
+        
+        // Додаємо обробники подій для кнопок скоромовок з логуванням
+        if (playTwisterBtn) {
+            console.log("Додаємо обробник для кнопки відтворення");
+            playTwisterBtn.addEventListener('click', () => {
+                console.log("Кнопку відтворення натиснуто");
+                this.playCurrentTongueTwister();
+            });
+        }
+        
+        if (nextTwisterBtn) {
+            console.log("Додаємо обробник для кнопки наступної скоромовки");
+            nextTwisterBtn.addEventListener('click', () => {
+                console.log("Кнопку наступної скоромовки натиснуто");
+                this.nextTongueTwister();
+            });
+        }
+        
+        if (prevTwisterBtn) {
+            console.log("Додаємо обробник для кнопки попередньої скоромовки");
+            prevTwisterBtn.addEventListener('click', () => {
+                console.log("Кнопку попередньої скоромовки натиснуто");
+                this.previousTongueTwister();
+            });
+        }
+        
+        if (repeatTwisterBtn) {
+            console.log("Додаємо обробник для кнопки повільного відтворення");
+            repeatTwisterBtn.addEventListener('click', () => {
+                console.log("Кнопку повільного відтворення натиснуто");
+                this.repeatTongueTwisterSlowly();
+            });
+        }
+        
+        // Додаємо обробники подій для кнопок швидкості
+        const twisterSpeedBtns = tongueTwistersSection.querySelectorAll('.twister-speed-btn');
+        if (twisterSpeedBtns.length > 0) {
+            console.log(`Знайдено ${twisterSpeedBtns.length} кнопок швидкості`);
+            twisterSpeedBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const speed = parseFloat(e.target.dataset.speed);
+                    console.log(`Обрано швидкість: ${speed}`);
+                    this.changeTwisterSpeed(speed);
+                });
+            });
+            
+            // Встановлюємо активну кнопку швидкості
+            this.updateTwisterSpeedButtons();
+        } else {
+            console.warn("Кнопки швидкості не знайдено");
+        }
+        
+        console.log("Ініціалізація секції скоромовок завершена");
+    }
+    
+    // Метод для зміни швидкості відтворення скоромовок
+    changeTwisterSpeed(speed) {
+        this.playbackSpeed = speed;
+        
+        // Оновлюємо кнопки швидкості
+        this.updateTwisterSpeedButtons();
+        
+        // Оновлюємо параметри відтворення поточної скоромовки
+        this.prepareTongueTwisterAudio();
+        
+        console.log(`Швидкість відтворення скоромовок змінено: ${speed}`);
+    }
+    
+    // Метод для оновлення кнопок швидкості скоромовок
+    updateTwisterSpeedButtons() {
+        const twisterSpeedBtns = document.querySelectorAll('.twister-speed-btn');
+        
+        twisterSpeedBtns.forEach(btn => {
+            const buttonSpeed = parseFloat(btn.dataset.speed);
+            if (buttonSpeed === this.playbackSpeed) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+    
+    // Метод для відображення поточної скоромовки
+    displayCurrentTongueTwister() {
+        const twisterText = document.getElementById('twister-text');
+        const twisterIndex = document.getElementById('twister-index');
+        const twisterTips = document.querySelector('.twister-tips');
+        
+        if (!twisterText || !twisterIndex) {
+            console.error("Не знайдено елементи для відображення скоромовки");
+            return;
+        }
+        
+        const currentTwister = this.tongueTwisters[this.currentTongueTwisterIndex];
+        console.log("Відображаємо скоромовку:", currentTwister.text);
+        
+        // Встановлюємо текст скоромовки та індекс
+        twisterText.textContent = currentTwister.text;
+        twisterIndex.textContent = `${this.currentTongueTwisterIndex + 1}/${this.tongueTwisters.length}`;
+        
+        // Відображаємо поради, якщо вони є
+        if (twisterTips && currentTwister.tips && currentTwister.tips.length > 0) {
+            // Очищаємо вміст контейнера порад
+            twisterTips.innerHTML = '<h3>Поради:</h3><ul></ul>';
+            const tipsUl = twisterTips.querySelector('ul');
+            
+            // Додаємо нові поради
+            currentTwister.tips.forEach(tip => {
+                const li = document.createElement('li');
+                li.textContent = tip;
+                tipsUl.appendChild(li);
+            });
+        }
+        
+        // Попередньо завантажуємо аудіо для нової скоромовки
+        this.prepareTongueTwisterAudio();
+    }
+    
+    // Оновлений метод для підготовки аудіо скоромовки
+    prepareTongueTwisterAudio() {
+        console.log("Підготовка аудіо для скоромовки");
+        
+        // Отримуємо поточну скоромовку
+        const currentTwister = this.tongueTwisters[this.currentTongueTwisterIndex];
+        
+        // Видаляємо попередній аудіо-елемент, якщо він є
+        const oldAudio = document.getElementById('twister-audio');
+        if (oldAudio) {
+            oldAudio.pause();
+            oldAudio.remove();
+        }
+        
+        // Створюємо новий аудіо-елемент
+        const audioElement = document.createElement('audio');
+        audioElement.id = 'twister-audio';
+        
+        // Перевіряємо наявність локального аудіофайлу
+        if (currentTwister.audioPath) {
+            console.log("Знайдено шлях до локального аудіофайлу:", currentTwister.audioPath);
+            audioElement.src = currentTwister.audioPath;
+            currentTwister.audioReady = true;
+            
+            // Додаємо обробник помилки завантаження файлу
+            audioElement.onerror = (e) => {
+                console.error("Помилка завантаження локального аудіо:", e);
+                currentTwister.audioReady = false;
+                
+                // Якщо є base64 аудіо, використовуємо його як запасний варіант
+                if (currentTwister.audioBase64) {
+                    console.log("Використовуємо base64 аудіо як запасний варіант");
+                    const audioSrc = `data:audio/mp3;base64,${currentTwister.audioBase64}`;
+                    audioElement.src = audioSrc;
+                    currentTwister.audioReady = true;
+                }
+            };
+        } 
+        // Якщо є аудіо base64, використовуємо його
+        else if (currentTwister.audioBase64) {
+            const audioSrc = `data:audio/mp3;base64,${currentTwister.audioBase64}`;
+            audioElement.src = audioSrc;
+            currentTwister.audioReady = true;
+        } else {
+            // Інакше готуємося використовувати Web Speech API
+            currentTwister.audioReady = false;
+            
+            // Створюємо новий utterance для Web Speech API
+            const utterance = new SpeechSynthesisUtterance(currentTwister.text);
+            utterance.lang = 'en-GB';
+            utterance.rate = this.playbackSpeed;
+            
+            // Знаходимо британський голос
+            const voices = this.synthesis.getVoices();
+            const britishVoice = voices.find(voice => 
+                voice.lang.includes('en-GB') || voice.name.includes('British')
+            );
+            
+            if (britishVoice) {
+                utterance.voice = britishVoice;
+            }
+            
+            // Зберігаємо utterance для подальшого використання
+            currentTwister.utterance = utterance;
+        }
+        
+        // Додаємо аудіо-елемент до DOM
+        document.body.appendChild(audioElement);
+    }
+    
+    // Метод для відтворення поточної скоромовки
+    playCurrentTongueTwister() {
+        console.log("Відтворюємо поточну скоромовку");
+        
+        // Отримуємо поточну скоромовку
+        const currentTwister = this.tongueTwisters[this.currentTongueTwisterIndex];
+        
+        // Отримуємо аудіо-елемент
+        const audioElement = document.getElementById('twister-audio');
+        
+        // Якщо є готове аудіо, відтворюємо його
+        if (currentTwister.audioReady && audioElement && audioElement.src) {
+            console.log("Відтворюємо завантажений аудіо-файл:", audioElement.src);
+            
+            // Показуємо індикатор завантаження
+            this.highlightTwisterText(true);
+            
+            // Встановлюємо швидкість відтворення
+            audioElement.playbackRate = this.playbackSpeed;
+            
+            // Додаємо обробники подій для відстеження стану відтворення
+            audioElement.onplay = () => {
+                console.log("Локальне аудіо: відтворення почалося");
+            };
+            
+            audioElement.onended = () => {
+                console.log("Локальне аудіо: відтворення завершено");
+                this.highlightTwisterText(false);
+            };
+            
+            audioElement.oncanplay = () => {
+                console.log("Локальне аудіо: файл готовий до відтворення");
+            };
+            
+            // Відтворюємо звук
+            audioElement.play().then(() => {
+                console.log("Відтворення аудіо почалося успішно");
+            }).catch(error => {
+                console.error("Помилка відтворення аудіо:", error);
+                // Відображаємо повідомлення про помилку
+                this.highlightTwisterText(false);
+                
+                // Спробуємо відтворити через Web Speech API
+                console.log("Спроба відтворення через Web Speech API");
+                this.playTongueTwisterUsingSpeech();
+            });
+        } else {
+            console.log("Готове аудіо відсутнє, використовуємо Web Speech API");
+            this.playTongueTwisterUsingSpeech();
+        }
+    }
+    
+    // Метод для відтворення скоромовки через Web Speech API
+    playTongueTwisterUsingSpeech() {
+        console.log("Відтворення скоромовки через Web Speech API");
+        
+        const currentTwister = this.tongueTwisters[this.currentTongueTwisterIndex];
+        
+        // Якщо Web Speech API не підтримується, показуємо скоромовку візуально
+        if (!this.speechSupported) {
+            console.log("Web Speech API не підтримується, використовуємо візуальний режим");
+            this.showTongueTwisterVisually(currentTwister.text);
+            return;
+        }
+        
+        try {
+            // Переконуємося, що об'єкт SpeechSynthesis ініціалізований
+            if (!this.synthesis || typeof this.synthesis.speak !== 'function') {
+                console.error("Об'єкт SpeechSynthesis не ініціалізований");
+                this.synthesis = window.speechSynthesis;
+            }
+            
+            // Зупиняємо попереднє відтворення, якщо воно є
+            if (this.synthesis.speaking) {
+                this.synthesis.cancel();
+            }
+            
+            // Створюємо новий utterance, якщо його немає
+            if (!currentTwister.utterance) {
+                const utterance = new SpeechSynthesisUtterance(currentTwister.text);
+                utterance.lang = 'en-GB';
+                utterance.rate = this.playbackSpeed;
+                
+                // Знаходимо британський голос
+                const voices = this.synthesis.getVoices();
+                const britishVoice = voices.find(voice => 
+                    voice.lang.includes('en-GB') || voice.name.includes('British')
+                );
+                
+                if (britishVoice) {
+                    utterance.voice = britishVoice;
+                }
+                
+                currentTwister.utterance = utterance;
+            } else {
+                // Оновлюємо швидкість, якщо utterance вже існує
+                currentTwister.utterance.rate = this.playbackSpeed;
+            }
+            
+            // Додаємо обробники подій для діагностики
+            currentTwister.utterance.onstart = () => {
+                console.log("Відтворення почалося");
+                this.highlightTwisterText(true);
+            };
+            
+            currentTwister.utterance.onend = () => {
+                console.log("Відтворення завершено");
+                this.highlightTwisterText(false);
+            };
+            
+            currentTwister.utterance.onerror = (e) => {
+                console.error("Помилка відтворення:", e);
+                this.highlightTwisterText(false);
+                
+                // Якщо помилка продовжується, переходимо до візуального режиму
+                if (e.error === "canceled" || e.error === "interrupted") {
+                    console.log("Помилка відтворення, переходимо до візуального режиму");
+                    this.showTongueTwisterVisually(currentTwister.text);
+                } else {
+                    alert("На жаль, відтворення скоромовки не вдалося. Спробуйте інший браузер.");
+                }
+            };
+            
+            // Відтворюємо
+            this.synthesis.speak(currentTwister.utterance);
+            console.log("Команда на відтворення надіслана");
+        } catch (error) {
+            console.error("Помилка відтворення через Web Speech API:", error);
+            
+            // При помилці переходимо до візуального режиму
+            this.showTongueTwisterVisually(currentTwister.text);
+        }
+    }
+    
+    // Метод для виділення тексту скоромовки під час відтворення
+    highlightTwisterText(highlight) {
+        const twisterText = document.getElementById('twister-text');
+        if (!twisterText) return;
+        
+        if (highlight) {
+            twisterText.classList.add('playing');
+        } else {
+            twisterText.classList.remove('playing');
+        }
+    }
+    
+    // Оновлений метод для візуального відображення скоромовки
+    showTongueTwisterVisually(text, slow = false) {
+        const twisterText = document.getElementById('twister-text');
+        if (!twisterText) return;
+        
+        // Зберігаємо оригінальний текст
+        const originalText = twisterText.textContent;
+        
+        // Розбиваємо текст на слова
+        const words = text.split(' ');
+        
+        // Швидкість анімації
+        const speed = slow ? 1200 : 600; // Для повільного режиму використовуємо більший інтервал
+        
+        // Починаємо анімацію слів
+        let wordIndex = 0;
+        const interval = setInterval(() => {
+            if (wordIndex < words.length) {
+                // Виділяємо поточне слово
+                const highlightedText = words.map((word, index) => 
+                    index === wordIndex 
+                        ? `<span class="highlight ${slow ? 'slow' : ''}">${word}</span>` 
+                        : word
+                ).join(' ');
+                
+                twisterText.innerHTML = highlightedText;
+                wordIndex++;
+            } else {
+                // Повертаємо оригінальний текст
+                twisterText.textContent = originalText;
+                clearInterval(interval);
+            }
+        }, speed);
+    }
+    
+    // Метод для переходу до наступної скоромовки
+    nextTongueTwister() {
+        this.currentTongueTwisterIndex++;
+        if (this.currentTongueTwisterIndex >= this.tongueTwisters.length) {
+            this.currentTongueTwisterIndex = 0;
+        }
+        
+        this.displayCurrentTongueTwister();
+    }
+    
+    // Метод для переходу до попередньої скоромовки
+    previousTongueTwister() {
+        this.currentTongueTwisterIndex--;
+        if (this.currentTongueTwisterIndex < 0) {
+            this.currentTongueTwisterIndex = this.tongueTwisters.length - 1;
+        }
+        
+        this.displayCurrentTongueTwister();
+    }
+    
+    // Метод для повільного повторення скоромовки
+    repeatTongueTwisterSlowly() {
+        console.log("Повільне відтворення скоромовки");
+        
+        // Отримуємо поточну скоромовку
+        const currentTwister = this.tongueTwisters[this.currentTongueTwisterIndex];
+        
+        // Отримуємо аудіо-елемент
+        const audioElement = document.getElementById('twister-audio');
+        
+        // Якщо є готове аудіо, відтворюємо його
+        if (currentTwister.audioReady && audioElement && audioElement.src) {
+            console.log("Відтворюємо завантажений аудіо-файл повільно");
+            
+            // Встановлюємо повільну швидкість відтворення
+            audioElement.playbackRate = 0.5;
+            
+            // Відтворюємо звук
+            audioElement.play().then(() => {
+                console.log("Повільне відтворення аудіо почалося успішно");
+            }).catch(error => {
+                console.error("Помилка повільного відтворення аудіо:", error);
+                this.playTongueTwisterSlowlyUsingSpeech();
+            });
+        } else {
+            console.log("Готове аудіо відсутнє, використовуємо Web Speech API для повільного відтворення");
+            this.playTongueTwisterSlowlyUsingSpeech();
+        }
+    }
+    
+    // Метод для повільного відтворення скоромовки через Web Speech API
+    playTongueTwisterSlowlyUsingSpeech() {
+        console.log("Повільне відтворення скоромовки через Web Speech API");
+        
+        const currentTwister = this.tongueTwisters[this.currentTongueTwisterIndex];
+        
+        // Якщо Web Speech API не підтримується, показуємо скоромовку візуально в повільному режимі
+        if (!this.speechSupported) {
+            console.log("Web Speech API не підтримується, використовуємо візуальний режим повільно");
+            this.showTongueTwisterVisually(currentTwister.text, true); // true для повільного режиму
+            return;
+        }
+        
+        try {
+            // Переконуємося, що об'єкт SpeechSynthesis ініціалізований
+            if (!this.synthesis || typeof this.synthesis.speak !== 'function') {
+                console.error("Об'єкт SpeechSynthesis не ініціалізований");
+                this.synthesis = window.speechSynthesis;
+            }
+            
+            // Зупиняємо попереднє відтворення, якщо воно є
+            if (this.synthesis.speaking) {
+                this.synthesis.cancel();
+            }
+            
+            // Створюємо новий utterance для повільного відтворення
+            const slowUtterance = new SpeechSynthesisUtterance(currentTwister.text);
+            slowUtterance.lang = 'en-GB';
+            slowUtterance.rate = 0.5; // Повільна швидкість
+            
+            // Знаходимо британський голос
+            const voices = this.synthesis.getVoices();
+            const britishVoice = voices.find(voice => 
+                voice.lang.includes('en-GB') || voice.name.includes('British')
+            );
+            
+            if (britishVoice) {
+                slowUtterance.voice = britishVoice;
+            }
+            
+            // Додаємо обробники подій для діагностики
+            slowUtterance.onstart = () => {
+                console.log("Повільне відтворення почалося");
+                this.highlightTwisterText(true);
+            };
+            
+            slowUtterance.onend = () => {
+                console.log("Повільне відтворення завершено");
+                this.highlightTwisterText(false);
+            };
+            
+            slowUtterance.onerror = (e) => {
+                console.error("Помилка повільного відтворення:", e);
+                this.highlightTwisterText(false);
+                
+                // Якщо помилка продовжується, переходимо до візуального режиму
+                if (e.error === "canceled" || e.error === "interrupted") {
+                    console.log("Помилка повільного відтворення, переходимо до візуального режиму");
+                    this.showTongueTwisterVisually(currentTwister.text, true); // true для повільного режиму
+                } else {
+                    alert("На жаль, повільне відтворення скоромовки не вдалося. Спробуйте інший браузер.");
+                }
+            };
+            
+            // Відтворюємо
+            this.synthesis.speak(slowUtterance);
+            console.log("Команда на повільне відтворення надіслана");
+        } catch (error) {
+            console.error("Помилка повільного відтворення через Web Speech API:", error);
+            
+            // При помилці переходимо до візуального режиму
+            this.showTongueTwisterVisually(currentTwister.text, true); // true для повільного режиму
         }
     }
 }

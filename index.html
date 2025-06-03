@@ -93,6 +93,7 @@
                 <div class="mode-switch">
                     <button class="mode-btn active" data-mode="game">Режим гри</button>
                     <button class="mode-btn" data-mode="learn">Режим вивчення</button>
+                    <button class="mode-btn" data-mode="tongue-twisters">Скоромовки</button>
                 </div>
             </div>
         </div>
@@ -100,6 +101,41 @@
         <!-- Phonetics Zone for learning pronunciation -->
         <div class="phonetics-zone" id="phonetics-zone" style="display: none;">
             <!-- Will be populated by phonetics-zone.js -->
+        </div>
+        
+        <!-- Tongue Twisters Section -->
+        <div class="tongue-twisters-section" id="tongue-twisters-section" style="display: none;">
+            <h2 class="section-title">🔄 Скоромовки</h2>
+            <p class="section-description">Практикуйте вимову з цими складними скоромовками</p>
+            
+            <div class="twister-container">
+                <div class="twister-text" id="twister-text">She sells seashells by the seashore</div>
+                <div class="twister-index" id="twister-index">1/8</div>
+                
+                <div class="twister-controls">
+                    <button class="twister-btn" id="play-twister-btn">🔊 Прослухати</button>
+                    <button class="twister-btn" id="repeat-twister-btn">🐢 Повільно</button>
+                    <button class="twister-btn" id="prev-twister-btn">⬅️ Попередня</button>
+                    <button class="twister-btn" id="next-twister-btn">➡️ Наступна</button>
+                </div>
+                
+                <div class="twister-speed-control">
+                    <span>Швидкість: </span>
+                    <button class="twister-speed-btn" data-speed="0.8">Повільно</button>
+                    <button class="twister-speed-btn active" data-speed="1.0">Нормально</button>
+                    <button class="twister-speed-btn" data-speed="1.2">Швидко</button>
+                </div>
+                
+                <div class="twister-tips">
+                    <h3>Поради:</h3>
+                    <ul>
+                        <li>Спочатку прослухайте скоромовку повільно</li>
+                        <li>Повторюйте кожен склад окремо</li>
+                        <li>Поступово збільшуйте швидкість</li>
+                        <li>Тренуйтеся щодня для найкращого результату</li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
         <div class="achievements">
