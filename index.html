@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pronunciation Quest</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+    <link rel="stylesheet" href="./assets/css/phonetics-zone.css">
+    <!-- Open Graph метадані для поширення в соцмережах -->
+    <meta property="og:title" content="Pronunciation Quest - Вивчайте британську вимову">
+    <meta property="og:description" content="Інтерактивна гра для вивчення британської вимови через цікаві завдання">
+    <meta property="og:image" content="./assets/images/og-image.jpg">
+    <meta property="og:url" content="https://yourusername.github.io/pronunciation-quest/">
+</head>
+<body>
+    <div class="union-jack-pattern"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🇬🇧 Pronunciation Quest</h1>
+            <p class="subtitle">Вивчайте британську вимову через гру!</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <span>Бали: </span><span id="score">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Рівень: </span><span id="level">1</span>
+                </div>
+                <div class="stat-item">
+                    <span>Серія: </span><span id="streak">0</span>
+                </div>
+            </div>
+            <div class="british-elements">☂️</div>
+        </div>
+
+        <div class="game-area">
+            <button class="info-button" id="info-button">ℹ️</button>
+            
+            <div class="info-panel" id="info-panel">
+                <h4>Як грати:</h4>
+                <p>1. Прослухайте слово, натиснувши кнопку "Прослухати"</p>
+                <p>2. Виберіть правильну відповідь з варіантів</p>
+                <p>3. Отримуйте бали за правильні відповіді та відкривайте нові досягнення</p>
+                <p>4. Змінюйте швидкість відтворення для кращого розуміння</p>
+                <p>5. Перемикайтесь між режимом гри та режимом вивчення для покращення навичок</p>
+            </div>
+            
+            <div class="level-selector">
+                <button class="level-btn beginner active" data-level="beginner">
+                    🌟 Початковий (A2-B1)
+                </button>
+                <button class="level-btn intermediate" data-level="intermediate">
+                    ⭐ Середній (B1-B2)
+                </button>
+                <button class="level-btn advanced" data-level="advanced">
+                    🏆 Просунутий (B2-C1)
+                </button>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+
+            <div class="game-content">
+                <div class="task-type" id="task-type">Оберіть правильну транскрипцію</div>
+                
+                <div class="word-display" id="word-display">schedule</div>
+                <div class="word-category" id="word-category">daily</div>
+                
+                <div class="audio-controls">
+                    <button class="play-btn" id="play-btn">🔊 Прослухати</button>
+                    <audio id="word-audio" preload="auto"></audio>
+                </div>
+
+                <div class="speed-control">
+                    <span>Швидкість: </span>
+                    <button class="speed-btn" data-speed="0.8">Повільно</button>
+                    <button class="speed-btn active" data-speed="1.0">Нормально</button>
+                    <button class="speed-btn" data-speed="1.2">Швидко</button>
+                </div>
+
+                <div class="options" id="options">
+                    <!-- Options will be populated by JavaScript -->
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+
+                <button class="next-btn" id="next-btn" disabled>Наступне слово ➡️</button>
+                
+                <div class="mode-switch">
+                    <button class="mode-btn active" data-mode="game">Режим гри</button>
+                    <button class="mode-btn" data-mode="learn">Режим вивчення</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Phonetics Zone for learning pronunciation -->
+        <div class="phonetics-zone" id="phonetics-zone" style="display: none;">
+            <!-- Will be populated by phonetics-zone.js -->
+        </div>
+
+        <div class="achievements">
+            <h3>🏅 Досягнення</h3>
+            <div id="achievements-list">
+                <span class="achievement-item" data-achievement="first-correct">Перша правильна відповідь</span>
+                <span class="achievement-item" data-achievement="streak-5">Серія з 5 правильних</span>
+                <span class="achievement-item" data-achievement="streak-10">Серія з 10 правильних</span>
+                <span class="achievement-item" data-achievement="vowel-master">Майстер голосних</span>
+                <span class="achievement-item" data-achievement="speed-demon">Швидка серія</span>
+                <span class="achievement-item" data-achievement="level-up">Підвищення рівня</span>
+                <span class="achievement-item" data-achievement="advanced-complete">Завершено просунутий рівень</span>
+                <span class="achievement-item" data-achievement="word-expert">Експерт зі слів</span>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <div class="social-links">
+                <a href="https://github.com/yourusername/pronunciation-quest" target="_blank" class="social-link">GitHub</a>
+                <a href="#" class="social-link">Twitter</a>
+                <a href="#" class="social-link">Facebook</a>
+            </div>
+            <p class="copyright">© 2023 Pronunciation Quest. Усі права захищені.</p>
+        </footer>
+    </div>
+
+    <script type="module" src="./assets/js/app.js"></script>
+</body>
+</html> 

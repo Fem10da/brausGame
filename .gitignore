@@ -1,0 +1,24 @@
+# Системні файли
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Редактори/IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Тимчасові файли
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock 
