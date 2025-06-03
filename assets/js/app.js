@@ -389,11 +389,27 @@ class PronunciationQuest {
         options.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'option-btn';
-            button.textContent = option.text;
+            
+            // Додаємо спеціальний клас для транскрипцій
+            if (this.currentTaskType === 'transcription') {
+                button.classList.add('transcription');
+                // Форматуємо транскрипцію для кращого відображення
+                button.innerHTML = this.formatTranscription(option.text);
+            } else {
+                button.textContent = option.text;
+            }
+            
             button.dataset.correct = option.correct;
             button.addEventListener('click', () => this.selectOption(button));
             optionsContainer.appendChild(button);
         });
+    }
+    
+    // Новий метод для форматування транскрипції
+    formatTranscription(transcription) {
+        // Виділяємо фонетичні символи
+        return transcription.replace(/([ɪiːɑɒɔʊuːeæʌəɜː]|[θðʃʒŋ]|[ˈˌ])/g, 
+            '<span class="phonetic-symbol">$1</span>');
     }
 
     generateTranscriptionOptions() {
@@ -402,41 +418,110 @@ class PronunciationQuest {
 
         console.log("Генерація опцій транскрипції для слова:", this.currentWord.word);
         
-        // Generate incorrect options
-        let incorrectOptions = [
-            correct.replace(/ˈ/g, 'ˌ'), // Wrong stress
-            correct.replace(/ː/g, ''), // Remove long vowels
-            correct.replace(/ə/g, 'e'), // Replace schwa
-            correct.replace(/ɒ/g, 'ɔː'), // Different vowel sounds
-            correct.replace(/æ/g, 'ɑː'), // Another vowel replacement
-            correct.replace(/ɪ/g, 'i'), // Short to normal i
-            correct.replace(/ʊ/g, 'u') // Short to normal u
-        ].filter(opt => opt !== correct && opt.length > 0);
-
+        // Створюємо більш логічні і типові помилки у транскрипції
+        const errorTypes = [
+            // Заміна ʃ на s (типова помилка для 'sh' звуку)
+            { find: /ʃ/g, replace: 's' },
+            
+            // Заміна довгих голосних на короткі
+            { find: /iː/g, replace: 'ɪ' },
+            { find: /ɑː/g, replace: 'ʌ' },
+            { find: /ɔː/g, replace: 'ɒ' },
+            { find: /uː/g, replace: 'ʊ' },
+            
+            // Заміна шва на інші голосні
+            { find: /ə/g, replace: 'ɛ' },
+            
+            // Зміна дифтонгів
+            { find: /eɪ/g, replace: 'e' },
+            { find: /aɪ/g, replace: 'ɪ' },
+            { find: /ɔɪ/g, replace: 'ɔ' },
+            
+            // Неправильне використання наголосу
+            { find: /ˈ/g, replace: 'ˌ' },
+            
+            // Заміна θ на t або f (типова помилка для 'th')
+            { find: /θ/g, replace: 't' },
+            
+            // Заміна ð на d або v (типова помилка для 'th')
+            { find: /ð/g, replace: 'd' }
+        ];
+        
+        // Створюємо набір неправильних варіантів з більш правдоподібними помилками
+        let incorrectOptions = [];
+        
+        // Для кожного типу помилки створюємо варіант
+        errorTypes.forEach(error => {
+            if (correct.match(error.find)) {
+                const incorrectOption = correct.replace(error.find, error.replace);
+                if (incorrectOption !== correct && !incorrectOptions.includes(incorrectOption)) {
+                    incorrectOptions.push(incorrectOption);
+                }
+            }
+        });
+        
+        // Якщо слово містить 'j' звук, створюємо варіант із заміною на 'dʒ' або навпаки
+        if (correct.includes('j')) {
+            incorrectOptions.push(correct.replace(/j/g, 'dʒ'));
+        } else if (correct.includes('dʒ')) {
+            incorrectOptions.push(correct.replace(/dʒ/g, 'j'));
+        }
+        
+        // Якщо слово містить 'w', створюємо варіант із заміною на 'v' або навпаки
+        if (correct.includes('w')) {
+            incorrectOptions.push(correct.replace(/w/g, 'v'));
+        } else if (correct.includes('v')) {
+            incorrectOptions.push(correct.replace(/v/g, 'w'));
+        }
+        
         console.log("Згенеровано некоректних опцій:", incorrectOptions.length);
         
-        // Якщо недостатньо некоректних варіантів, додаємо ще деякі модифікації
+        // Якщо ми не згенерували достатньо неправильних варіантів, додаємо стандартні
         if (incorrectOptions.length < 3) {
-            const additionalOptions = [
-                '/' + correct.slice(1).replace(/ə/g, 'a'),
-                '/' + correct.slice(1).replace(/ː/g, '').replace(/ʃ/g, 's'),
-                '/' + correct.slice(1).replace(/ʊ/g, 'u').replace(/ɪ/g, 'i')
-            ].filter(opt => opt !== correct && !incorrectOptions.includes(opt));
+            // Додаємо кілька стандартних типів помилок
+            const standardErrors = [
+                // Переставляємо сусідні звуки (якщо можливо)
+                correct.replace(/([^\/])([^\/])/, '$2$1'),
+                // Видаляємо один звук
+                correct.replace(/[^\/\s][^\s\/]/, ''),
+                // Додаємо зайвий звук 'r' (типова помилка для британської вимови)
+                correct.replace(/([aeiouɑɒɔəɜ])/, '$1r')
+            ];
             
-            incorrectOptions = [...incorrectOptions, ...additionalOptions];
-            console.log("Додано додаткових опцій:", additionalOptions.length);
+            standardErrors.forEach(err => {
+                if (err !== correct && !incorrectOptions.includes(err)) {
+                    incorrectOptions.push(err);
+                }
+            });
         }
-
-        // Add some of the incorrect options (щонайменше 2, якщо доступно)
+        
+        // Фільтруємо, щоб залишити тільки унікальні і відмінні від правильного
+        incorrectOptions = incorrectOptions.filter(opt => 
+            opt !== correct && 
+            !options.some(o => o.text === opt) && 
+            this.isValidTranscription(opt)
+        );
+        
+        // Вибираємо до 3 неправильних варіантів
         const optionsToAdd = Math.min(3, incorrectOptions.length);
         incorrectOptions.slice(0, optionsToAdd).forEach(opt => {
             options.push({ text: opt, correct: false });
         });
         
-        // Якщо у нас все ще недостатньо опцій, додаємо "зовсім неправильний" варіант
+        // Якщо у нас все ще недостатньо опцій, додаємо універсальний неправильний варіант
         if (options.length < 2) {
+            // Створюємо повністю іншу транскрипцію залежно від початкової
+            let fallbackOption;
+            if (correct.includes('ʃ')) {
+                fallbackOption = '/sɪmpl/';
+            } else if (correct.includes('ð') || correct.includes('θ')) {
+                fallbackOption = '/ˈnɒrməl/';
+            } else {
+                fallbackOption = '/ˈbeɪsɪk/';
+            }
+            
             options.push({ 
-                text: '/ʌnˈnəʊn/',
+                text: fallbackOption,
                 correct: false 
             });
             console.warn("Додано запасний варіант через недостатню кількість опцій");
@@ -445,6 +530,38 @@ class PronunciationQuest {
         console.log("Загальна кількість опцій перед перемішуванням:", options.length);
 
         return this.shuffleArray(options);
+    }
+
+    // Додаємо метод для перевірки валідності транскрипції
+    isValidTranscription(transcription) {
+        // Перевіряємо, щоб транскрипція починалася і закінчувалася слешами
+        if (!transcription.startsWith('/') || !transcription.endsWith('/')) {
+            return false;
+        }
+        
+        // Перевіряємо, щоб транскрипція містила хоча б один голосний звук
+        const hasVowel = /[ɪiːɑɒɔʊuːeæʌəɜː]/g.test(transcription);
+        if (!hasVowel) {
+            return false;
+        }
+        
+        // Перевіряємо, щоб у транскрипції не було двох голосних підряд (крім дифтонгів)
+        const hasConsecutiveVowels = /[ɪiɑɒɔʊueæʌəɜ][ɪiɑɒɔʊueæʌəɜ]/g.test(transcription);
+        if (hasConsecutiveVowels) {
+            // Виняток для дифтонгів
+            const isDiphthong = /eɪ|aɪ|ɔɪ|əʊ|aʊ|ɪə|eə|ʊə/g.test(transcription);
+            if (!isDiphthong) {
+                return false;
+            }
+        }
+        
+        // Перевіряємо загальну довжину (не занадто коротка і не занадто довга)
+        const content = transcription.slice(1, -1); // Видаляємо слеші
+        if (content.length < 2 || content.length > this.currentWord.word.length * 3) {
+            return false;
+        }
+        
+        return true;
     }
 
     generateStressOptions() {

@@ -206,6 +206,8 @@ body {
     width: 100%;
     text-align: center;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 1px;
 }
 
 .option-btn:hover {
@@ -224,6 +226,17 @@ body {
     background: #e74c3c;
     color: white;
     border-color: #e74c3c;
+}
+
+.option-btn.transcription {
+    font-size: 1.3em;
+    line-height: 1.5;
+    padding: 15px 10px;
+}
+
+.phonetic-symbol {
+    font-weight: bold;
+    color: #3498db;
 }
 
 .next-btn {
