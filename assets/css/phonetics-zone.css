@@ -53,20 +53,8 @@
 }
 
 .back-btn {
-    background: none;
-    border: none;
-    color: #3498db;
-    font-size: 1em;
-    cursor: pointer;
-    padding: 8px 15px;
-    border-radius: 50px;
-    transition: all 0.3s ease;
-    position: absolute;
-    left: 0;
-}
-
-.back-btn:hover {
-    background: rgba(52, 152, 219, 0.1);
+    position: static;
+    left: auto;
 }
 
 /* Стилі для груп звуків */

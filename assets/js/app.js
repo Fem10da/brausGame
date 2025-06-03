@@ -23,6 +23,9 @@ class PronunciationQuest {
         // Додаємо прапорець для відстеження поточної скоромовки
         this.currentTongueTwisterIndex = 0;
         
+        // Додаємо прапорець, що блокує збереження прогресу після скидання
+        this.blockProgressSaving = false;
+        
         this.words = {
             beginner: [
                 { word: 'schedule', transcription: '/ˈʃedjuːl/', stress: 1, audio: null, category: 'daily' },
@@ -357,6 +360,11 @@ class PronunciationQuest {
         this.preloadAudioForCurrentLevel();
         
         this.loadWord();
+        
+        // Зберігаємо прогрес тільки якщо немає блокування
+        if (!this.blockProgressSaving) {
+            this.saveProgress();
+        }
     }
 
     loadWord() {
@@ -871,7 +879,13 @@ class PronunciationQuest {
         
         document.getElementById('next-btn').disabled = false;
         this.updateUI();
-        this.saveProgress();
+        
+        // Зберігаємо прогрес тільки якщо немає блокування
+        if (!this.blockProgressSaving) {
+            this.saveProgress();
+        } else {
+            console.log('Збереження прогресу після відповіді заблоковано');
+        }
     }
 
     getCorrectAnswer() {
@@ -985,32 +999,73 @@ class PronunciationQuest {
         this.saveProgress();
     }
     
-    // Новий метод для показу нотифікації про досягнення
+    // Покращений метод для показу нотифікації про досягнення
     showAchievementNotification(achievementText) {
+        // Перевіряємо, чи немає активної нотифікації
+        const existingNotification = document.querySelector('.achievement-notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+        
         // Створюємо елемент нотифікації
         const notification = document.createElement('div');
         notification.className = 'achievement-notification';
         
-        // Додаємо вміст
+        // Додаємо вміст з анімованим emoji
         notification.innerHTML = `
             <div class="achievement-icon">🏆</div>
             <div class="achievement-content">
                 <div class="achievement-title">Нове досягнення!</div>
                 <div class="achievement-text">${achievementText}</div>
             </div>
+            <button class="notification-close">✕</button>
         `;
         
         // Додаємо до DOM
         document.body.appendChild(notification);
         
+        // Додаємо кнопку закриття
+        const closeButton = notification.querySelector('.notification-close');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            });
+        }
+        
+        // Додаємо звуковий ефект досягнення, якщо дозволено
+        if (window.AudioContext || window.webkitAudioContext) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // До високої октави
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // Мі
+                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // Соль
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                console.warn("Не вдалося відтворити звук досягнення:", e);
+            }
+        }
+        
         // Додаємо клас для анімації
-        setTimeout(() => notification.classList.add('show'), 100);
+        setTimeout(() => notification.classList.add('show'), 50);
         
         // Видаляємо після затримки
         setTimeout(() => {
             notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 500);
-        }, 4000);
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
     }
 
     levelUp() {
@@ -1023,6 +1078,12 @@ class PronunciationQuest {
     }
 
     saveProgress() {
+        // Якщо встановлено блокування збереження прогресу, не зберігаємо нічого
+        if (this.blockProgressSaving) {
+            console.log('Збереження прогресу заблоковано');
+            return;
+        }
+        
         try {
             const progress = {
                 score: this.score,
@@ -1031,10 +1092,14 @@ class PronunciationQuest {
                 achievements: Array.from(this.achievements),
                 correctAnswers: this.correctAnswers,
                 vowelCorrect: this.vowelCorrect,
-                currentTongueTwisterIndex: this.currentTongueTwisterIndex // Додаємо індекс поточної скоромовки
+                currentTongueTwisterIndex: this.currentTongueTwisterIndex, // Додаємо індекс поточної скоромовки
+                currentLevel: this.currentLevel, // Зберігаємо поточний рівень складності
+                currentWordIndex: this.currentWordIndex, // Зберігаємо індекс поточного слова
+                lastMode: document.querySelector('.mode-btn.active')?.dataset.mode || 'game' // Зберігаємо останній активний режим
             };
             
             localStorage.setItem('pronunciationQuestProgress', JSON.stringify(progress));
+            console.log('Прогрес збережено');
         } catch (error) {
             console.error('Error saving progress:', error);
         }
@@ -1120,6 +1185,17 @@ class PronunciationQuest {
         const phoneticsZoneElement = document.getElementById('phonetics-zone');
         const tongueTwistersSection = document.getElementById('tongue-twisters-section');
         
+        // Видаляємо активний стан з усіх кнопок режимів
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Активуємо кнопку відповідного режиму, якщо вона існує
+        const activeButton = document.querySelector(`.mode-btn[data-mode="${mode}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
+        
         // Ховаємо всі секції спочатку
         mainMenu.style.display = 'none';
         gameArea.style.display = 'none';
@@ -1147,6 +1223,15 @@ class PronunciationQuest {
                 phoneticsZone.init(phoneticsZoneElement);
                 this.phoneticsZoneInitialized = true;
             }
+            
+            // Видаляємо будь-які посилання на скоромовки в режимі вивчення
+            const learnModeButtons = phoneticsZoneElement.querySelectorAll('button, a');
+            learnModeButtons.forEach(button => {
+                if (button.textContent.toLowerCase().includes('скоромовк') || 
+                    button.getAttribute('href')?.includes('tongue-twisters')) {
+                    button.remove();
+                }
+            });
         } else if (mode === 'tongue-twisters') {
             // Показуємо секцію скоромовок
             if (tongueTwistersSection) {
@@ -1162,6 +1247,14 @@ class PronunciationQuest {
             // Показуємо головне меню
             mainMenu.style.display = 'flex';
         }
+        
+        // Зберігаємо прогрес із зазначенням поточного режиму, якщо немає блокування
+        if (!this.blockProgressSaving) {
+            this.saveProgress();
+        }
+        
+        // Прокручуємо сторінку догори після зміни режиму
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // Новий метод для перемішування слів поточного рівня
@@ -1701,7 +1794,123 @@ class PronunciationQuest {
         document.getElementById('tongue-twisters-section').style.display = 'none';
         
         // Показуємо головне меню
-        document.getElementById('main-menu').style.display = 'flex';
+        const mainMenu = document.getElementById('main-menu');
+        mainMenu.style.display = 'flex';
+        
+        // Додаємо кнопку скидання прогресу, якщо її ще немає
+        if (!document.getElementById('reset-progress-btn')) {
+            const resetBtn = document.createElement('button');
+            resetBtn.id = 'reset-progress-btn';
+            resetBtn.className = 'reset-btn';
+            resetBtn.textContent = '🔄 Скинути прогрес';
+            resetBtn.addEventListener('click', () => this.resetProgress());
+            
+            // Додаємо кнопку після елементів меню
+            const menuButtons = mainMenu.querySelector('.menu-buttons');
+            if (menuButtons) {
+                menuButtons.after(resetBtn);
+            } else {
+                mainMenu.appendChild(resetBtn);
+            }
+        }
+        
+        // Зупиняємо будь-яке відтворення аудіо
+        this.stopAllAudio();
+    }
+    
+    // Додаємо метод для зупинки всіх аудіо
+    stopAllAudio() {
+        // Зупиняємо синтезоване мовлення
+        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+        
+        // Зупиняємо HTML5 аудіо
+        const audioElements = document.querySelectorAll('audio');
+        audioElements.forEach(audio => {
+            if (!audio.paused) {
+                audio.pause();
+            }
+        });
+        
+        console.log('Всі аудіо зупинено');
+    }
+
+    // Додаємо метод для скидання прогресу
+    resetProgress() {
+        // Запитуємо підтвердження перед скиданням
+        const isConfirmed = confirm('Ви впевнені, що хочете скинути весь прогрес? Ця дія незворотня.');
+        
+        if (isConfirmed) {
+            // Блокуємо збереження прогресу
+            this.blockProgressSaving = true;
+            
+            // Скидаємо всі дані прогресу
+            this.score = 0;
+            this.level = 1;
+            this.streak = 0;
+            this.achievements = new Set();
+            this.correctAnswers = 0;
+            this.vowelCorrect = 0;
+            this.currentWordIndex = 0;
+            this.currentLevel = 'beginner';
+            this.currentTongueTwisterIndex = 0;
+            
+            // Видаляємо збережений прогрес з localStorage
+            localStorage.removeItem('pronunciationQuestProgress');
+            
+            // Оновлюємо інтерфейс
+            this.updateUI();
+            
+            // Оновлюємо рівень і перезавантажуємо слово
+            document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
+            const beginnerBtn = document.querySelector(`.level-btn[data-level="beginner"]`);
+            if (beginnerBtn) {
+                beginnerBtn.classList.add('active');
+            }
+            
+            // Скидаємо стан досягнень в інтерфейсі
+            document.querySelectorAll('.achievement-item').forEach(item => {
+                item.classList.remove('unlocked');
+            });
+            
+            // Відображаємо повідомлення
+            alert('Прогрес успішно скинуто.');
+            
+            // Після певного часу знімаємо блокування збереження (через 5 секунд)
+            setTimeout(() => {
+                this.blockProgressSaving = false;
+                console.log('Блокування збереження прогресу знято');
+            }, 5000);
+            
+            // Повністю відновлюємо початковий стан гри
+            this.resetGameState();
+            
+            // Перезавантажуємо гру
+            this.showMainMenu();
+        }
+    }
+    
+    // Додаємо новий метод для повного відновлення стану гри
+    resetGameState() {
+        // Скидаємо рівень складності
+        this.changeLevel('beginner');
+        
+        // Перемішуємо слова для свіжого початку
+        this.shuffleWordsForCurrentLevel();
+        
+        // Скидаємо слово до першого
+        this.currentWordIndex = 0;
+        this.loadWord();
+        
+        // Скидаємо налаштування швидкості
+        this.playbackSpeed = 1.0;
+        this.changeSpeed(1.0);
+        
+        // Оновлюємо прогрес-бар
+        this.updateProgress();
+        
+        console.log('Стан гри повністю відновлено');
     }
 }
 

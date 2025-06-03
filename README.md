@@ -49,7 +49,7 @@ git clone https://github.com/yourusername/pronunciation-quest.git
 
 2. Відкрийте файл `index.html` у сучасному браузері (Chrome, Firefox, Edge, Safari)
 
-Або просто [відвідайте гру онлайн](https://yourusername.github.io/pronunciation-quest/)
+Або просто [відвідайте гру онлайн](https://fem10da.github.io/brausGame/)
 
 ## 🌐 Вимоги до браузера
 

@@ -37,6 +37,9 @@ class PhoneticsZone {
         if (!this.container) return;
 
         this.container.innerHTML = `
+            <div class="back-navigation">
+                <button id="back-to-main-menu-from-phonetics-btn" class="back-btn">← Повернутися до меню</button>
+            </div>
             <h3>Оберіть фонетичну зону для вивчення</h3>
             <div class="phonetics-zone-selector">
                 <button class="zone-btn" data-zone="vowels">Голосні звуки</button>
@@ -53,6 +56,16 @@ class PhoneticsZone {
                 this.selectZone(zone);
             });
         });
+        
+        // Додаємо обробник для кнопки повернення до головного меню
+        const backToMainMenuBtn = this.container.querySelector('#back-to-main-menu-from-phonetics-btn');
+        if (backToMainMenuBtn) {
+            backToMainMenuBtn.addEventListener('click', () => {
+                if (window.game && typeof window.game.showMainMenu === 'function') {
+                    window.game.showMainMenu();
+                }
+            });
+        }
     }
 
     /**
@@ -99,6 +112,7 @@ class PhoneticsZone {
         let html = `
             <div class="phonetics-zone-header">
                 <button class="back-btn">⬅️ Назад</button>
+                <button class="main-menu-btn">🏠 Головне меню</button>
                 <h3>${this.activeZone === 'vowels' ? 'Голосні звуки' : 'Приголосні звуки'}</h3>
             </div>
             <div class="sound-groups">
@@ -122,6 +136,16 @@ class PhoneticsZone {
         backBtn.addEventListener('click', () => {
             this.renderZoneSelector();
         });
+        
+        // Додаємо обробник для кнопки повернення до головного меню
+        const mainMenuBtn = this.container.querySelector('.main-menu-btn');
+        if (mainMenuBtn) {
+            mainMenuBtn.addEventListener('click', () => {
+                if (window.game && typeof window.game.showMainMenu === 'function') {
+                    window.game.showMainMenu();
+                }
+            });
+        }
 
         const exploreButtons = this.container.querySelectorAll('.explore-btn');
         exploreButtons.forEach(btn => {
@@ -150,6 +174,7 @@ class PhoneticsZone {
             let html = `
                 <div class="phonetics-zone-header">
                     <button class="back-btn" data-back-to="${this.activeZone}">⬅️ Назад</button>
+                    <button class="main-menu-btn">🏠 Головне меню</button>
                     <h3>${group.name}</h3>
                     <p>${group.description}</p>
                 </div>
@@ -180,6 +205,16 @@ class PhoneticsZone {
                 const backTo = backBtn.dataset.backTo;
                 this.selectZone(backTo);
             });
+            
+            // Додаємо обробник для кнопки повернення до головного меню
+            const mainMenuBtn = this.container.querySelector('.main-menu-btn');
+            if (mainMenuBtn) {
+                mainMenuBtn.addEventListener('click', () => {
+                    if (window.game && typeof window.game.showMainMenu === 'function') {
+                        window.game.showMainMenu();
+                    }
+                });
+            }
 
             const playButtons = this.container.querySelectorAll('.play-sound-btn');
             playButtons.forEach(btn => {
@@ -197,14 +232,23 @@ class PhoneticsZone {
                 example.addEventListener('click', () => {
                     const word = example.dataset.word;
                     this.playExampleWord(word);
-                    
-                    // Виділяємо натиснуте слово
-                    examples.forEach(e => e.classList.remove('active'));
-                    example.classList.add('active');
                 });
             });
         } catch (error) {
-            console.error('Помилка при відображенні групи звуків:', error);
+            console.error("Помилка при відображенні групи звуків:", error);
+            this.container.innerHTML = `
+                <div class="phonetics-zone-header">
+                    <button class="back-btn" data-back-to="${this.activeZone}">⬅️ Назад</button>
+                    <h3>Помилка</h3>
+                </div>
+                <p>Сталася помилка при завантаженні звуків. Спробуйте ще раз.</p>
+            `;
+            
+            const backBtn = this.container.querySelector('.back-btn');
+            backBtn.addEventListener('click', () => {
+                const backTo = backBtn.dataset.backTo;
+                this.selectZone(backTo);
+            });
         } finally {
             this.setLoading(false);
         }
@@ -219,8 +263,8 @@ class PhoneticsZone {
         let html = `
             <div class="phonetics-zone-header">
                 <button class="back-btn">⬅️ Назад</button>
+                <button class="main-menu-btn">🏠 Головне меню</button>
                 <h3>Скоромовки</h3>
-                <p>Тренуйте вимову з допомогою скоромовок</p>
             </div>
             <div class="tongue-twisters-list">
         `;
@@ -250,6 +294,16 @@ class PhoneticsZone {
         backBtn.addEventListener('click', () => {
             this.renderZoneSelector();
         });
+        
+        // Додаємо обробник для кнопки повернення до головного меню
+        const mainMenuBtn = this.container.querySelector('.main-menu-btn');
+        if (mainMenuBtn) {
+            mainMenuBtn.addEventListener('click', () => {
+                if (window.game && typeof window.game.showMainMenu === 'function') {
+                    window.game.showMainMenu();
+                }
+            });
+        }
 
         const playButtons = this.container.querySelectorAll('.play-twister-btn');
         playButtons.forEach(btn => {
