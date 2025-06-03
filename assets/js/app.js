@@ -1099,7 +1099,7 @@ class PronunciationQuest {
             };
             
             localStorage.setItem('pronunciationQuestProgress', JSON.stringify(progress));
-            console.log('Прогрес збережено');
+            console.log('Прогрес збережено:', progress);
         } catch (error) {
             console.error('Error saving progress:', error);
         }
@@ -1122,6 +1122,26 @@ class PronunciationQuest {
                 // Завантажуємо індекс скоромовки, якщо він збережений
                 if (progress.currentTongueTwisterIndex !== undefined) {
                     this.currentTongueTwisterIndex = progress.currentTongueTwisterIndex;
+                }
+                
+                // Завантажуємо збережений рівень складності
+                if (progress.currentLevel) {
+                    this.currentLevel = progress.currentLevel;
+                    console.log('Завантажено збережений рівень:', this.currentLevel);
+                    
+                    // Оновлюємо UI для відображення правильного рівня
+                    setTimeout(() => {
+                        document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
+                        const levelBtn = document.querySelector(`.level-btn[data-level="${this.currentLevel}"]`);
+                        if (levelBtn) {
+                            levelBtn.classList.add('active');
+                        }
+                    }, 100);
+                }
+                
+                // Завантажуємо індекс поточного слова
+                if (progress.currentWordIndex !== undefined) {
+                    this.currentWordIndex = progress.currentWordIndex;
                 }
                 
                 // Update achievements UI
@@ -1814,8 +1834,54 @@ class PronunciationQuest {
             }
         }
         
+        // Додаємо кнопку розблокування прогресу, якщо збереження заблоковане
+        if (this.blockProgressSaving && !document.getElementById('unblock-progress-btn')) {
+            const unblockBtn = document.createElement('button');
+            unblockBtn.id = 'unblock-progress-btn';
+            unblockBtn.className = 'reset-btn';
+            unblockBtn.style.backgroundColor = '#27ae60';
+            unblockBtn.textContent = '🔓 Розблокувати збереження прогресу';
+            unblockBtn.addEventListener('click', () => this.unblockProgress());
+            
+            // Додаємо кнопку після кнопки скидання прогресу
+            const resetBtn = document.getElementById('reset-progress-btn');
+            if (resetBtn) {
+                resetBtn.after(unblockBtn);
+            } else {
+                const menuButtons = mainMenu.querySelector('.menu-buttons');
+                if (menuButtons) {
+                    menuButtons.after(unblockBtn);
+                } else {
+                    mainMenu.appendChild(unblockBtn);
+                }
+            }
+        } else if (!this.blockProgressSaving && document.getElementById('unblock-progress-btn')) {
+            // Видаляємо кнопку, якщо збереження розблоковане
+            document.getElementById('unblock-progress-btn').remove();
+        }
+        
         // Зупиняємо будь-яке відтворення аудіо
         this.stopAllAudio();
+    }
+    
+    // Додаємо метод для розблокування збереження прогресу
+    unblockProgress() {
+        const isConfirmed = confirm('Ви впевнені, що хочете розблокувати збереження прогресу? Ваш поточний прогрес почне зберігатися.');
+        
+        if (isConfirmed) {
+            this.blockProgressSaving = false;
+            
+            // Видаляємо кнопку розблокування
+            const unblockBtn = document.getElementById('unblock-progress-btn');
+            if (unblockBtn) {
+                unblockBtn.remove();
+            }
+            
+            // Зберігаємо поточний прогрес
+            this.saveProgress();
+            
+            alert('Збереження прогресу розблоковано. Ваш прогрес тепер буде зберігатися.');
+        }
     }
     
     // Додаємо метод для зупинки всіх аудіо
@@ -1842,7 +1908,7 @@ class PronunciationQuest {
         const isConfirmed = confirm('Ви впевнені, що хочете скинути весь прогрес? Ця дія незворотня.');
         
         if (isConfirmed) {
-            // Блокуємо збереження прогресу
+            // Блокуємо збереження прогресу на постійній основі
             this.blockProgressSaving = true;
             
             // Скидаємо всі дані прогресу
@@ -1875,13 +1941,7 @@ class PronunciationQuest {
             });
             
             // Відображаємо повідомлення
-            alert('Прогрес успішно скинуто.');
-            
-            // Після певного часу знімаємо блокування збереження (через 5 секунд)
-            setTimeout(() => {
-                this.blockProgressSaving = false;
-                console.log('Блокування збереження прогресу знято');
-            }, 5000);
+            alert('Прогрес успішно скинуто. Блокування збереження прогресу активовано. Щоб знову почати зберігати прогрес, перезавантажте сторінку.');
             
             // Повністю відновлюємо початковий стан гри
             this.resetGameState();
