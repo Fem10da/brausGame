@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pronunciation Quest</title>
+    <title>Pronunciation Quest - Навчайтеся британської вимови</title>
     <link rel="stylesheet" href="./assets/css/styles.css">
     <link rel="stylesheet" href="./assets/css/phonetics-zone.css">
     <!-- Open Graph метадані для поширення в соцмережах -->
     <meta property="og:title" content="Pronunciation Quest - Вивчайте британську вимову">
     <meta property="og:description" content="Інтерактивна гра для вивчення британської вимови через цікаві завдання">
     <meta property="og:image" content="./assets/images/og-image.jpg">
-    <meta property="og:url" content="https://yourusername.github.io/pronunciation-quest/">
+    <meta property="og:url" content="https://github.com/fem10da/brausGame">
 </head>
 <body>
     <div class="union-jack-pattern"></div>
@@ -31,20 +31,36 @@
                 </div>
             </div>
             <div class="british-elements">☂️</div>
+            <button id="info-button" class="info-button">ℹ️</button>
         </div>
 
-        <div class="game-area">
-            <button class="info-button" id="info-button">ℹ️</button>
-            
-            <div class="info-panel" id="info-panel">
-                <h4>Як грати:</h4>
-                <p>1. Прослухайте слово, натиснувши кнопку "Прослухати"</p>
-                <p>2. Виберіть правильну відповідь з варіантів</p>
-                <p>3. Отримуйте бали за правильні відповіді та відкривайте нові досягнення</p>
-                <p>4. Змінюйте швидкість відтворення для кращого розуміння</p>
-                <p>5. Перемикайтесь між режимом гри та режимом вивчення для покращення навичок</p>
+        <!-- Нове головне меню -->
+        <div id="main-menu" class="main-menu">
+            <h2>Виберіть режим</h2>
+            <div class="menu-buttons">
+                <button class="menu-btn quiz-btn" data-mode="quiz">
+                    <div class="menu-icon">🎯</div>
+                    <div class="menu-btn-text">Квіз</div>
+                    <div class="menu-btn-desc">Перевірте знання вимови слів</div>
+                </button>
+                <button class="menu-btn learn-btn" data-mode="learn">
+                    <div class="menu-icon">📚</div>
+                    <div class="menu-btn-text">Вивчення</div>
+                    <div class="menu-btn-desc">Вивчайте фонетичні символи</div>
+                </button>
+                <button class="menu-btn twister-btn" data-mode="tongue-twisters">
+                    <div class="menu-icon">🗣️</div>
+                    <div class="menu-btn-text">Скоромовки</div>
+                    <div class="menu-btn-desc">Тренуйте вимову зі скоромовками</div>
+                </button>
             </div>
-            
+        </div>
+
+        <!-- Ігрова зона (квіз) -->
+        <div class="game-area" style="display: none;">
+            <div class="back-navigation">
+                <button id="back-to-menu-btn" class="back-btn">← Повернутися до меню</button>
+            </div>
             <div class="level-selector">
                 <button class="level-btn beginner active" data-level="beginner">
                     🌟 Початковий (A2-B1)
@@ -98,13 +114,22 @@
             </div>
         </div>
         
-        <!-- Phonetics Zone for learning pronunciation -->
-        <div class="phonetics-zone" id="phonetics-zone" style="display: none;">
-            <!-- Will be populated by phonetics-zone.js -->
+        <!-- Секція фонетичної зони для вивчення звуків -->
+        <div id="phonetics-zone" class="phonetics-zone" style="display: none;">
+            <div class="back-navigation">
+                <button id="back-from-phonetics-btn" class="back-btn">← Повернутися до меню</button>
+            </div>
+            <h2>Фонетична зона</h2>
+            <p>Вивчайте фонетичні символи та звуки англійської мови</p>
+            
+            <!-- Зміст буде додано через JS -->
         </div>
         
-        <!-- Tongue Twisters Section -->
-        <div class="tongue-twisters-section" id="tongue-twisters-section" style="display: none;">
+        <!-- Секція скоромовок -->
+        <div id="tongue-twisters-section" class="tongue-twisters-section" style="display: none;">
+            <div class="back-navigation">
+                <button id="back-from-twisters-btn" class="back-btn">← Повернутися до меню</button>
+            </div>
             <h2 class="section-title">🔄 Скоромовки</h2>
             <p class="section-description">Практикуйте вимову з цими складними скоромовками</p>
             
@@ -136,6 +161,17 @@
                     </ul>
                 </div>
             </div>
+        </div>
+
+        <div id="info-panel" class="info-panel">
+            <h3>Як користуватися Pronunciation Quest</h3>
+            <p>Ця гра допоможе вам покращити вимову англійських слів, зосереджуючись на особливостях британської вимови.</p>
+            <ul>
+                <li><strong>Квіз:</strong> Перевіряйте свої знання транскрипції, наголосу та звуків</li>
+                <li><strong>Вивчення:</strong> Вивчайте фонетичні символи та їхню вимову</li>
+                <li><strong>Скоромовки:</strong> Тренуйте вимову зі складними фразами</li>
+            </ul>
+            <p>Натисніть кнопку "Послухати", щоб почути правильну вимову. Вибирайте швидкість відтворення для зручності.</p>
         </div>
 
         <div class="achievements">

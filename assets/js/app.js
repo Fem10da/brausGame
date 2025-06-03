@@ -93,45 +93,45 @@ class PronunciationQuest {
                 { word: 'throughout', transcription: '/θruːˈaʊt/', stress: 2, audio: null, category: 'prepositions' }
             ],
             advanced: [
-                { word: 'worcestershire', transcription: '/ˈwʊstəʃə/', stress: 1, audio: null, category: 'places' },
-                { word: 'gloucestershire', transcription: '/ˈɡlɒstəʃə/', stress: 1, audio: null, category: 'places' },
-                { word: 'lieutenant', transcription: '/lefˈtenənt/', stress: 2, audio: null, category: 'military' },
-                { word: 'quay', transcription: '/kiː/', stress: 1, audio: null, category: 'maritime' },
-                { word: 'choir', transcription: '/ˈkwaɪə/', stress: 1, audio: null, category: 'music' },
-                { word: 'colonel', transcription: '/ˈkɜːnəl/', stress: 1, audio: null, category: 'military' },
-                { word: 'yacht', transcription: '/jɒt/', stress: 1, audio: null, category: 'maritime' },
-                { word: 'draught', transcription: '/drɑːft/', stress: 1, audio: null, category: 'daily' },
-                { word: 'paradigm', transcription: '/ˈpærədaɪm/', stress: 1, audio: null, category: 'academic' },
-                { word: 'anemone', transcription: '/əˈnemənɪ/', stress: 2, audio: null, category: 'nature' },
-                { word: 'hyperbole', transcription: '/haɪˈpɜːbəli/', stress: 2, audio: null, category: 'language' },
-                { word: 'archipelago', transcription: '/ˌɑːkɪˈpeləɡəʊ/', stress: 3, audio: null, category: 'geography' },
+                { word: 'worcestershire', transcription: '/ˈwʊstəʃə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/worcestershire.mp3', category: 'places' },
+                { word: 'gloucestershire', transcription: '/ˈɡlɒstəʃə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/gloucestershire.mp3', category: 'places' },
+                { word: 'lieutenant', transcription: '/lefˈtenənt/', stress: 2, audio: null, audioPath: 'assets/audio/words/advanced/lieutenant.mp3', category: 'military' },
+                { word: 'quay', transcription: '/kiː/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/quay.mp3', category: 'maritime' },
+                { word: 'choir', transcription: '/ˈkwaɪə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/choir.mp3', category: 'music' },
+                { word: 'colonel', transcription: '/ˈkɜːnəl/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/colonel.mp3', category: 'military' },
+                { word: 'yacht', transcription: '/jɒt/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/yacht.mp3', category: 'maritime' },
+                { word: 'draught', transcription: '/drɑːft/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/draught.mp3', category: 'daily' },
+                { word: 'paradigm', transcription: '/ˈpærədaɪm/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/paradigm.mp3', category: 'academic' },
+                { word: 'anemone', transcription: '/əˈnemənɪ/', stress: 2, audio: null, audioPath: 'assets/audio/words/advanced/anemone.mp3', category: 'nature' },
+                { word: 'hyperbole', transcription: '/haɪˈpɜːbəli/', stress: 2, audio: null, audioPath: 'assets/audio/words/advanced/hyperbole.mp3', category: 'language' },
+                { word: 'archipelago', transcription: '/ˌɑːkɪˈpeləɡəʊ/', stress: 3, audio: null, audioPath: 'assets/audio/words/advanced/archipelago.mp3', category: 'geography' },
                 // Додаємо нові слова для advanced рівня
-                { word: 'asthma', transcription: '/ˈæsmə/', stress: 1, audio: null, category: 'health' },
-                { word: 'bourgeois', transcription: '/ˈbɔːʒwɑː/', stress: 1, audio: null, category: 'society' },
-                { word: 'catastrophe', transcription: '/kəˈtæstrəfi/', stress: 2, audio: null, category: 'events' },
-                { word: 'debt', transcription: '/det/', stress: 1, audio: null, category: 'finance' },
-                { word: 'etiquette', transcription: '/ˈetɪket/', stress: 1, audio: null, category: 'social' },
-                { word: 'faux pas', transcription: '/ˌfəʊ ˈpɑː/', stress: 2, audio: null, category: 'social' },
-                { word: 'genre', transcription: '/ˈʒɒnrə/', stress: 1, audio: null, category: 'arts' },
-                { word: 'heir', transcription: '/eə/', stress: 1, audio: null, category: 'family' },
-                { word: 'isle', transcription: '/aɪl/', stress: 1, audio: null, category: 'geography' },
-                { word: 'jalapeno', transcription: '/ˌhæləˈpiːnəʊ/', stress: 3, audio: null, category: 'food' },
-                { word: 'knead', transcription: '/niːd/', stress: 1, audio: null, category: 'actions' },
-                { word: 'Leicester', transcription: '/ˈlestə/', stress: 1, audio: null, category: 'places' },
-                { word: 'mortgage', transcription: '/ˈmɔːɡɪdʒ/', stress: 1, audio: null, category: 'finance' },
-                { word: 'niche', transcription: '/niːʃ/', stress: 1, audio: null, category: 'business' },
-                { word: 'onomatopoeia', transcription: '/ˌɒnəˌmætəˈpiːə/', stress: 5, audio: null, category: 'language' },
-                { word: 'pneumonia', transcription: '/njuːˈməʊniə/', stress: 2, audio: null, category: 'health' },
-                { word: 'queue', transcription: '/kjuː/', stress: 1, audio: null, category: 'daily' },
-                { word: 'reciprocity', transcription: '/ˌresɪˈprɒsɪti/', stress: 3, audio: null, category: 'relationships' },
-                { word: 'subtle', transcription: '/ˈsʌtl/', stress: 1, audio: null, category: 'adjectives' },
-                { word: 'thesaurus', transcription: '/θɪˈsɔːrəs/', stress: 2, audio: null, category: 'books' },
-                { word: 'usurp', transcription: '/juːˈzɜːp/', stress: 2, audio: null, category: 'politics' },
-                { word: 'victuals', transcription: '/ˈvɪtlz/', stress: 1, audio: null, category: 'food' },
-                { word: 'Warwick', transcription: '/ˈwɒrɪk/', stress: 1, audio: null, category: 'places' },
-                { word: 'xylophone', transcription: '/ˈzaɪləfəʊn/', stress: 1, audio: null, category: 'music' },
-                { word: 'yoghurt', transcription: '/ˈjɒɡət/', stress: 1, audio: null, category: 'food' },
-                { word: 'zeitgeist', transcription: '/ˈzaɪtɡaɪst/', stress: 1, audio: null, category: 'culture' }
+                { word: 'asthma', transcription: '/ˈæsmə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/asthma.mp3', category: 'health' },
+                { word: 'bourgeois', transcription: '/ˈbɔːʒwɑː/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/bourgeois.mp3', category: 'society' },
+                { word: 'catastrophe', transcription: '/kəˈtæstrəfi/', stress: 2, audio: null, audioPath: 'assets/audio/words/advanced/catastrophe.mp3', category: 'events' },
+                { word: 'debt', transcription: '/det/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/debt.mp3', category: 'finance' },
+                { word: 'etiquette', transcription: '/ˈetɪket/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/etiquette.mp3', category: 'social' },
+                { word: 'faux pas', transcription: '/ˌfəʊ ˈpɑː/', stress: 2, audio: null, audioPath: 'assets/audio/words/advanced/faux-pas.mp3', category: 'social' },
+                { word: 'genre', transcription: '/ˈʒɒnrə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/genre.mp3', category: 'arts' },
+                { word: 'heir', transcription: '/eə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/heir.mp3', category: 'family' },
+                { word: 'isle', transcription: '/aɪl/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/isle.mp3', category: 'geography' },
+                { word: 'jalapeno', transcription: '/ˌhæləˈpiːnəʊ/', stress: 3, audio: null, audioPath: 'assets/audio/words/advanced/jalapeno.mp3', category: 'food' },
+                { word: 'knead', transcription: '/niːd/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/knead.mp3', category: 'actions' },
+                { word: 'Leicester', transcription: '/ˈlestə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/leicester.mp3', category: 'places' },
+                { word: 'mortgage', transcription: '/ˈmɔːɡɪdʒ/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/mortgage.mp3', category: 'finance' },
+                { word: 'niche', transcription: '/niːʃ/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/niche.mp3', category: 'business' },
+                { word: 'onomatopoeia', transcription: '/ˌɒnəˌmætəˈpiːə/', stress: 5, audio: null, audioPath: 'assets/audio/words/advanced/onomatopoeia.mp3', category: 'language' },
+                { word: 'pneumonia', transcription: '/njuːˈməʊniə/', stress: 2, audio: null, audioPath: 'assets/audio/words/advanced/pneumonia.mp3', category: 'health' },
+                { word: 'queue', transcription: '/kjuː/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/queue.mp3', category: 'daily' },
+                { word: 'reciprocity', transcription: '/ˌresɪˈprɒsɪti/', stress: 3, audio: null, audioPath: 'assets/audio/words/advanced/reciprocity.mp3', category: 'relationships' },
+                { word: 'subtle', transcription: '/ˈsʌtl/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/subtle.mp3', category: 'adjectives' },
+                { word: 'thesaurus', transcription: '/θɪˈsɔːrəs/', stress: 2, audio: null, audioPath: 'assets/audio/words/advanced/thesaurus.mp3', category: 'books' },
+                { word: 'usurp', transcription: '/juːˈzɜːp/', stress: 2, audio: null, audioPath: 'assets/audio/words/advanced/usurp.mp3', category: 'politics' },
+                { word: 'victuals', transcription: '/ˈvɪtlz/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/victuals.mp3', category: 'food' },
+                { word: 'Warwick', transcription: '/ˈwɒrɪk/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/warwick.mp3', category: 'places' },
+                { word: 'xylophone', transcription: '/ˈzaɪləfəʊn/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/xylophone.mp3', category: 'music' },
+                { word: 'yoghurt', transcription: '/ˈjɒɡət/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/yoghurt.mp3', category: 'food' },
+                { word: 'zeitgeist', transcription: '/ˈzaɪtɡaɪst/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/zeitgeist.mp3', category: 'culture' }
             ]
         };
 
@@ -157,24 +157,81 @@ class PronunciationQuest {
         try {
             // Витягуємо список слів для поточного рівня
             const wordsForLevel = this.words[this.currentLevel];
-            const wordList = wordsForLevel.map(item => item.word);
             
-            // Використовуємо AudioLoader для завантаження аудіо
-            await audioLoader.preloadAudioForWords(wordList);
+            // Перевіряємо наявність локальних аудіофайлів
+            const wordsWithoutLocalAudio = [];
             
-            // Оновлюємо аудіо для кожного слова
-            wordsForLevel.forEach(wordItem => {
-                const audioUrl = audioLoader.getCachedAudioUrl(wordItem.word);
-                if (audioUrl) {
-                    wordItem.audio = audioUrl;
+            // Спочатку перевіряємо наявність локальних аудіо для всіх слів
+            for (const wordItem of wordsForLevel) {
+                if (wordItem.audioPath) {
+                    try {
+                        // Створюємо аудіо елемент для перевірки наявності файлу
+                        const audioElement = new Audio(wordItem.audioPath);
+                        
+                        // Використовуємо проміс для перевірки завантаження
+                        await new Promise((resolve, reject) => {
+                            audioElement.oncanplaythrough = () => {
+                                console.log(`Локальне аудіо для "${wordItem.word}" завантажено успішно`);
+                                wordItem.audio = wordItem.audioPath;
+                                resolve();
+                            };
+                            
+                            audioElement.onerror = () => {
+                                console.warn(`Локальне аудіо для "${wordItem.word}" не знайдено`);
+                                wordsWithoutLocalAudio.push(wordItem.word);
+                                resolve(); // Ми все одно продовжуємо процес
+                            };
+                            
+                            // Обробляємо випадок, коли аудіо не може бути завантажене протягом 5 секунд
+                            setTimeout(() => {
+                                if (!wordItem.audio) {
+                                    console.warn(`Таймаут завантаження аудіо для "${wordItem.word}"`);
+                                    wordsWithoutLocalAudio.push(wordItem.word);
+                                    resolve();
+                                }
+                            }, 5000);
+                            
+                            // Починаємо завантаження
+                            audioElement.load();
+                        });
+                    } catch (error) {
+                        console.error(`Помилка перевірки локального аудіо для "${wordItem.word}":`, error);
+                        wordsWithoutLocalAudio.push(wordItem.word);
+                    }
+                } else {
+                    wordsWithoutLocalAudio.push(wordItem.word);
                 }
-            });
+            }
+            
+            console.log("Слова без локального аудіо:", wordsWithoutLocalAudio);
+            
+            // Якщо є слова без локального аудіо, спробуємо завантажити їх через API
+            if (wordsWithoutLocalAudio.length > 0 && this.currentLevel !== 'advanced') {
+                console.log("Завантаження аудіо через API для", wordsWithoutLocalAudio.length, "слів");
+                
+                // Використовуємо AudioLoader для завантаження аудіо тільки для слів без локальних файлів
+                await audioLoader.preloadAudioForWords(wordsWithoutLocalAudio);
+                
+                // Оновлюємо аудіо для кожного слова
+                wordsForLevel.forEach(wordItem => {
+                    if (!wordItem.audio) {
+                        const audioUrl = audioLoader.getCachedAudioUrl(wordItem.word);
+                        if (audioUrl) {
+                            wordItem.audio = audioUrl;
+                        }
+                    }
+                });
+            } else if (this.currentLevel === 'advanced') {
+                console.log("Рівень advanced: завантаження через API пропущено, щоб уникнути CORS помилок");
+            }
             
             // Оновлюємо поточне слово для правильного відтворення
             if (this.currentWord) {
-                const audioUrl = audioLoader.getCachedAudioUrl(this.currentWord.word);
-                if (audioUrl) {
-                    this.currentWord.audio = audioUrl;
+                if (!this.currentWord.audio) {
+                    const audioUrl = audioLoader.getCachedAudioUrl(this.currentWord.word);
+                    if (audioUrl) {
+                        this.currentWord.audio = audioUrl;
+                    }
                 }
             }
         } catch (error) {
@@ -195,6 +252,9 @@ class PronunciationQuest {
         // Load saved progress
         this.loadProgress();
         this.updateUI();
+        
+        // Показуємо головне меню при ініціалізації
+        this.showMainMenu();
     }
     
     // Метод для перевірки підтримки Web Speech API
@@ -240,6 +300,16 @@ class PronunciationQuest {
     }
 
     bindEvents() {
+        // Обробники подій для головного меню
+        document.querySelectorAll('.menu-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.switchMode(e.target.closest('.menu-btn').dataset.mode));
+        });
+
+        // Кнопки повернення до головного меню
+        document.getElementById('back-to-menu-btn')?.addEventListener('click', () => this.showMainMenu());
+        document.getElementById('back-from-phonetics-btn')?.addEventListener('click', () => this.showMainMenu());
+        document.getElementById('back-from-twisters-btn')?.addEventListener('click', () => this.showMainMenu());
+
         // Level selector
         document.querySelectorAll('.level-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.changeLevel(e.target.dataset.level));
@@ -256,10 +326,21 @@ class PronunciationQuest {
         // Next button
         document.getElementById('next-btn').addEventListener('click', () => this.nextWord());
         
-        // Mode switching
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.switchMode(e.target.dataset.mode));
-        });
+        // Інформаційна кнопка
+        const infoButton = document.getElementById('info-button');
+        const infoPanel = document.getElementById('info-panel');
+        
+        if (infoButton && infoPanel) {
+            infoButton.addEventListener('click', () => {
+                if (infoPanel.style.display === 'block') {
+                    infoPanel.style.display = 'none';
+                    infoButton.textContent = 'ℹ️';
+                } else {
+                    infoPanel.style.display = 'block';
+                    infoButton.textContent = '✖️';
+                }
+            });
+        }
     }
 
     changeLevel(level) {
@@ -299,8 +380,31 @@ class PronunciationQuest {
         this.hideFeedback();
         document.getElementById('next-btn').disabled = true;
         
-        // Якщо для слова немає аудіо, спробуємо завантажити
-        this.loadAudioForCurrentWord();
+        // Перевіряємо наявність локального аудіо шляху
+        if (this.currentWord.audioPath) {
+            console.log("Для слова знайдено локальний аудіошлях:", this.currentWord.audioPath);
+            
+            // Створюємо аудіо елемент для перевірки файлу
+            const audioElement = new Audio(this.currentWord.audioPath);
+            
+            // Встановлюємо обробник для успішного завантаження
+            audioElement.oncanplaythrough = () => {
+                console.log("Локальне аудіо для", this.currentWord.word, "завантажено успішно");
+                this.currentWord.audio = this.currentWord.audioPath;
+            };
+            
+            // Встановлюємо обробник для помилки
+            audioElement.onerror = () => {
+                console.warn("Локальне аудіо для", this.currentWord.word, "не знайдено, використовуємо API");
+                this.loadAudioForCurrentWord();
+            };
+            
+            // Починаємо завантаження (це не відтворює звук)
+            audioElement.load();
+        } else {
+            // Якщо для слова немає локального аудіо, спробуємо завантажити з API
+            this.loadAudioForCurrentWord();
+        }
     }
 
     // Додаємо новий метод для завантаження аудіо для поточного слова
@@ -378,9 +482,44 @@ class PronunciationQuest {
         const audio = document.getElementById('word-audio');
         
         if (this.currentWord.audio) {
+            console.log("Спроба відтворення аудіо:", this.currentWord.audio);
+            
             // Використовуємо реальний аудіофайл
             audio.src = this.currentWord.audio;
             audio.playbackRate = this.playbackSpeed;
+            
+            // Додаємо обробники подій для відстеження стану
+            audio.onplay = () => {
+                console.log("Аудіо почало відтворюватися");
+            };
+            
+            audio.onended = () => {
+                console.log("Відтворення аудіо завершено");
+            };
+            
+            audio.onerror = (error) => {
+                console.error('Помилка відтворення аудіо:', error);
+                // Перевіряємо, чи шлях є локальним
+                if (this.currentWord.audio === this.currentWord.audioPath) {
+                    console.log("Помилка з локальним аудіо, спробуємо Web Speech API");
+                    this.currentWord.audio = null; // Скидаємо аудіо, щоб не намагатися знову його використати
+                }
+                this.fallbackToSynthesizedAudio();
+            };
+            
+            // Встановлюємо таймаут на випадок, якщо аудіо не відтворюється
+            const audioTimeout = setTimeout(() => {
+                if (audio.paused) {
+                    console.warn("Аудіо не почало відтворюватися протягом 3 секунд");
+                    this.fallbackToSynthesizedAudio();
+                }
+            }, 3000);
+            
+            // Очищаємо таймаут, якщо аудіо почало відтворюватися
+            audio.onplaying = () => {
+                clearTimeout(audioTimeout);
+            };
+            
             audio.play().catch(error => {
                 console.error('Помилка відтворення аудіо:', error);
                 this.fallbackToSynthesizedAudio();
@@ -428,8 +567,11 @@ class PronunciationQuest {
         }
 
         console.log("Generated options:", options);
+        
+        // Завжди перемішуємо варіанти відповідей для більшої випадковості
+        const shuffledOptions = this.shuffleArray(options);
 
-        options.forEach((option, index) => {
+        shuffledOptions.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'option-btn';
             
@@ -827,13 +969,48 @@ class PronunciationQuest {
         // Update UI
         const achievementElement = document.querySelector(`[data-achievement="${achievementId}"]`);
         if (achievementElement) {
-            achievementElement.classList.add('unlocked');
+            // Додаємо красиву анімацію для досягнення
+            achievementElement.classList.add('animating');
             
-            // Show notification
-            this.showFeedback(true, `🏆 Нове досягнення: ${achievementElement.textContent}`);
+            // Спочатку показуємо нотифікацію
+            this.showAchievementNotification(achievementElement.textContent);
+            
+            // Потім додаємо клас unlocked після невеликої затримки
+            setTimeout(() => {
+                achievementElement.classList.add('unlocked');
+                achievementElement.classList.remove('animating');
+            }, 500);
         }
         
         this.saveProgress();
+    }
+    
+    // Новий метод для показу нотифікації про досягнення
+    showAchievementNotification(achievementText) {
+        // Створюємо елемент нотифікації
+        const notification = document.createElement('div');
+        notification.className = 'achievement-notification';
+        
+        // Додаємо вміст
+        notification.innerHTML = `
+            <div class="achievement-icon">🏆</div>
+            <div class="achievement-content">
+                <div class="achievement-title">Нове досягнення!</div>
+                <div class="achievement-text">${achievementText}</div>
+            </div>
+        `;
+        
+        // Додаємо до DOM
+        document.body.appendChild(notification);
+        
+        // Додаємо клас для анімації
+        setTimeout(() => notification.classList.add('show'), 100);
+        
+        // Видаляємо після затримки
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 500);
+        }, 4000);
     }
 
     levelUp() {
@@ -903,10 +1080,27 @@ class PronunciationQuest {
         
         console.log("Перемішування масиву, початковий стан:", JSON.stringify(array));
         
+        // Використовуємо алгоритм Фішера-Єйтса для перемішування
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
+            // Використовуємо криптографічно захищене випадкове число для більшої випадковості
             const j = Math.floor(Math.random() * (i + 1));
             [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        
+        // Перевіряємо, чи дійсно масив перемішано
+        let isSame = true;
+        for (let i = 0; i < array.length; i++) {
+            if (array[i] !== shuffled[i]) {
+                isSame = false;
+                break;
+            }
+        }
+        
+        // Якщо масив не змінився після перемішування, спробуємо ще раз
+        if (isSame && array.length > 2) {
+            console.log("Масив не змінився після перемішування, спробуємо ще раз");
+            return this.shuffleArray(array);
         }
         
         console.log("Перемішаний масив:", JSON.stringify(shuffled));
@@ -919,26 +1113,32 @@ class PronunciationQuest {
         return shuffled;
     }
 
-    // Додаємо метод для перемикання режимів
+    // Додаємо метод для перемикання режимів (оновлений)
     switchMode(mode) {
+        const mainMenu = document.getElementById('main-menu');
         const gameArea = document.querySelector('.game-area');
         const phoneticsZoneElement = document.getElementById('phonetics-zone');
         const tongueTwistersSection = document.getElementById('tongue-twisters-section');
-        const modeButtons = document.querySelectorAll('.mode-btn');
-        
-        // Оновлюємо кнопки
-        modeButtons.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
         
         // Ховаємо всі секції спочатку
+        mainMenu.style.display = 'none';
         gameArea.style.display = 'none';
         phoneticsZoneElement.style.display = 'none';
         if (tongueTwistersSection) {
             tongueTwistersSection.style.display = 'none';
         }
         
-        if (mode === 'learn') {
+        if (mode === 'quiz') {
+            // Показуємо ігрову зону (режим квізу)
+            gameArea.style.display = 'block';
+            
+            // Перемішуємо слова при вході в режим квізу
+            this.shuffleWordsForCurrentLevel();
+            
+            // Завантажуємо перше слово
+            this.currentWordIndex = 0;
+            this.loadWord();
+        } else if (mode === 'learn') {
             // Показуємо фонетичну зону
             phoneticsZoneElement.style.display = 'block';
             
@@ -958,12 +1158,19 @@ class PronunciationQuest {
                     this.tongueTwistersInitialized = true;
                 }
             }
-        } else {
-            // Показуємо ігрову зону (режим гри)
-            gameArea.style.display = 'block';
+        } else if (mode === 'main-menu') {
+            // Показуємо головне меню
+            mainMenu.style.display = 'flex';
         }
     }
-    
+
+    // Новий метод для перемішування слів поточного рівня
+    shuffleWordsForCurrentLevel() {
+        const wordsForLevel = this.words[this.currentLevel];
+        this.words[this.currentLevel] = this.shuffleArray([...wordsForLevel]);
+        console.log(`Слова для рівня ${this.currentLevel} перемішані`);
+    }
+
     // Метод для ініціалізації секції скоромовок
     initTongueTwisters() {
         console.log("Ініціалізуємо секцію скоромовок");
@@ -1485,6 +1692,17 @@ class PronunciationQuest {
             this.showTongueTwisterVisually(currentTwister.text, true); // true для повільного режиму
         }
     }
+
+    // Новий метод для показу головного меню
+    showMainMenu() {
+        // Ховаємо всі секції
+        document.querySelector('.game-area').style.display = 'none';
+        document.getElementById('phonetics-zone').style.display = 'none';
+        document.getElementById('tongue-twisters-section').style.display = 'none';
+        
+        // Показуємо головне меню
+        document.getElementById('main-menu').style.display = 'flex';
+    }
 }
 
 // Додаємо індикатор завантаження до DOM при запуску
@@ -1503,31 +1721,10 @@ function addLoadingIndicator() {
     }
 }
 
-// Додаємо функцію для інформаційної кнопки
-function setupInfoButton() {
-    const infoButton = document.getElementById('info-button');
-    const infoPanel = document.getElementById('info-panel');
-    
-    if (infoButton && infoPanel) {
-        infoButton.addEventListener('click', () => {
-            if (infoPanel.style.display === 'block') {
-                infoPanel.style.display = 'none';
-                infoButton.textContent = 'ℹ️';
-            } else {
-                infoPanel.style.display = 'block';
-                infoButton.textContent = '✖️';
-            }
-        });
-    }
-}
-
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
     // Додаємо індикатор завантаження
     addLoadingIndicator();
-    
-    // Налаштовуємо інформаційну кнопку
-    setupInfoButton();
     
     // Check if browser supports the Web Speech API
     if (!window.speechSynthesis) {
