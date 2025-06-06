@@ -53,6 +53,11 @@
                     <div class="menu-btn-text">Скоромовки</div>
                     <div class="menu-btn-desc">Тренуйте вимову зі скоромовками</div>
                 </button>
+                <button class="menu-btn flashcard-btn" data-mode="flashcards">
+                    <div class="menu-icon">🃏</div>
+                    <div class="menu-btn-text">Картки</div>
+                    <div class="menu-btn-desc">Запам'ятовуйте нові слова</div>
+                </button>
             </div>
         </div>
 
@@ -163,6 +168,26 @@
             </div>
         </div>
 
+        <!-- Секція карток для запам'ятовування слів -->
+        <div id="flashcards-section" class="flashcards-section" style="display: none;">
+            <div class="back-navigation">
+                <button id="back-from-flashcards-btn" class="back-btn">← Повернутися до меню</button>
+            </div>
+            <h2 class="section-title">🃏 Картки</h2>
+            <div class="flashcard-container">
+                <div class="flashcard-word" id="flashcard-word">word</div>
+                <div class="flashcard-info" id="flashcard-info" style="display: none;">
+                    <div id="flashcard-transcription"></div>
+                    <div id="flashcard-stress"></div>
+                </div>
+                <div class="flashcard-controls">
+                    <button class="flashcard-btn" id="flashcard-play-btn">🔊</button>
+                    <button class="flashcard-btn" id="flashcard-reveal-btn">Показати</button>
+                    <button class="flashcard-btn" id="flashcard-next-btn">➡️</button>
+                </div>
+            </div>
+        </div>
+
         <div id="info-panel" class="info-panel">
             <h3>Як користуватися Pronunciation Quest</h3>
             <p>Ця гра допоможе вам покращити вимову англійських слів, зосереджуючись на особливостях британської вимови.</p>
@@ -170,6 +195,7 @@
                 <li><strong>Квіз:</strong> Перевіряйте свої знання транскрипції, наголосу та звуків</li>
                 <li><strong>Вивчення:</strong> Вивчайте фонетичні символи та їхню вимову</li>
                 <li><strong>Скоромовки:</strong> Тренуйте вимову зі складними фразами</li>
+                <li><strong>Картки:</strong> Запам'ятовуйте нові слова за допомогою карток</li>
             </ul>
             <p>Натисніть кнопку "Послухати", щоб почути правильну вимову. Вибирайте швидкість відтворення для зручності.</p>
         </div>
