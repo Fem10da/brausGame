@@ -899,7 +899,7 @@ class PronunciationQuest {
                 const transcription = this.currentWord.transcription;
                 let category = 0;
                 
-                if (transcription.includes('iː') || transcription.includes('ɑː') || transcription.includes('ɔː')) {
+                if (transcription.includes('iː') || transcription.includes('ɑː') || transcription.includes('ɔː') || transcription.includes('uː') || transcription.includes('ɜː')) {
                     category = 1;
                 } else if (transcription.includes('eɪ') || transcription.includes('aɪ') || transcription.includes('ɔɪ')) {
                     category = 2;
