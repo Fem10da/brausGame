@@ -309,7 +309,7 @@ class PhoneticsZone {
         playButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const text = btn.dataset.text;
-                this.playTonguetwister(text);
+                this.playTongueTwister(text);
             });
         });
 
@@ -395,7 +395,7 @@ class PhoneticsZone {
      * Відтворює скоромовку
      * @param {string} text - Текст скоромовки
      */
-    playTonguetwister(text) {
+    playTongueTwister(text) {
         this.synthesizeAndPlayWord(text);
     }
 
