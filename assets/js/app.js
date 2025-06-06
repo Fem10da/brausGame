@@ -1902,6 +1902,16 @@ class PronunciationQuest {
         console.log('Всі аудіо зупинено');
     }
 
+    /**
+     * Reset the entire game progress and return to the initial state.
+     *
+     * This method clears any saved data from localStorage and sets
+     * `blockProgressSaving` to `true`, preventing further automatic saving
+     * of progress. A confirmation dialog is shown to the user before the
+     * reset occurs.
+     *
+     * @returns {void}
+     */
     // Додаємо метод для скидання прогресу
     resetProgress() {
         // Запитуємо підтвердження перед скиданням
