@@ -511,54 +511,55 @@ class PronunciationQuest {
     }
 
     playAudio() {
-        // Спершу намагаємося відтворити аудіо з API, якщо є
         const audio = document.getElementById('word-audio');
-        
+
+        // Якщо доступне реальне аудіо, спершу намагаємося відтворити його
         if (this.currentWord.audio) {
             console.log("Спроба відтворення аудіо:", this.currentWord.audio);
-            
-            // Використовуємо реальний аудіофайл
+
             audio.src = this.currentWord.audio;
             audio.playbackRate = this.playbackSpeed;
-            
-            // Додаємо обробники подій для відстеження стану
+
+            // Якщо аудіо почало відтворюватися, зупиняємо синтезований голос
+            const handlePlaying = () => {
+                clearTimeout(audioTimeout);
+                if (this.synthesis.speaking) {
+                    this.synthesis.cancel();
+                }
+            };
+
+            audio.onplaying = handlePlaying;
             audio.onplay = () => {
                 console.log("Аудіо почало відтворюватися");
             };
-            
             audio.onended = () => {
                 console.log("Відтворення аудіо завершено");
             };
-            
             audio.onerror = (error) => {
                 console.error('Помилка відтворення аудіо:', error);
-                // Перевіряємо, чи шлях є локальним
                 if (this.currentWord.audio === this.currentWord.audioPath) {
                     console.log("Помилка з локальним аудіо, спробуємо Web Speech API");
-                    this.currentWord.audio = null; // Скидаємо аудіо, щоб не намагатися знову його використати
+                    this.currentWord.audio = null;
                 }
+                clearTimeout(audioTimeout);
                 this.fallbackToSynthesizedAudio();
             };
-            
-            // Встановлюємо таймаут на випадок, якщо аудіо не відтворюється
+
+            // Якщо аудіо не почало відтворюватися протягом 3 секунд, використовуємо синтезований голос
             const audioTimeout = setTimeout(() => {
                 if (audio.paused) {
                     console.warn("Аудіо не почало відтворюватися протягом 3 секунд");
                     this.fallbackToSynthesizedAudio();
                 }
             }, 3000);
-            
-            // Очищаємо таймаут, якщо аудіо почало відтворюватися
-            audio.onplaying = () => {
-                clearTimeout(audioTimeout);
-            };
-            
+
             audio.play().catch(error => {
                 console.error('Помилка відтворення аудіо:', error);
+                clearTimeout(audioTimeout);
                 this.fallbackToSynthesizedAudio();
             });
         } else {
-            // Використовуємо синтезований голос як запасний варіант
+            // В іншому випадку одразу використовуємо синтезований голос
             this.fallbackToSynthesizedAudio();
         }
     }
