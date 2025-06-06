@@ -1,0 +1,16 @@
+{
+  "name": "brausgame",
+  "version": "1.0.0",
+  "description": "Інтерактивна браузерна гра для вивчення британської вимови через ігрові механіки.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
