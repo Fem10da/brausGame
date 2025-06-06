@@ -25,6 +25,10 @@ class PronunciationQuest {
         
         // Додаємо прапорець, що блокує збереження прогресу після скидання
         this.blockProgressSaving = false;
+
+        // Індекс для режиму карток
+        this.flashcardIndex = 0;
+        this.flashcardsInitialized = false;
         
         this.words = {
             beginner: [
@@ -59,6 +63,11 @@ class PronunciationQuest {
                 { word: 'leisure', transcription: '/ˈleʒə/', stress: 1, audio: null, category: 'activities' },
                 { word: 'measure', transcription: '/ˈmeʒə/', stress: 1, audio: null, category: 'actions' },
                 { word: 'picture', transcription: '/ˈpɪktʃə/', stress: 1, audio: null, category: 'objects' }
+                ,{ word: 'apple', transcription: '/ˈæpl/', stress: 1, audio: null, category: 'food' }
+                ,{ word: 'doctor', transcription: '/ˈdɒktə/', stress: 1, audio: null, category: 'health' }
+                ,{ word: 'family', transcription: '/ˈfæmɪli/', stress: 1, audio: null, category: 'people' }
+                ,{ word: 'holiday', transcription: '/ˈhɒlədeɪ/', stress: 1, audio: null, category: 'events' }
+                ,{ word: 'music', transcription: '/ˈmjuːzɪk/', stress: 1, audio: null, category: 'culture' }
             ],
             intermediate: [
                 { word: 'advertisement', transcription: '/ədˈvɜːtɪsmənt/', stress: 2, audio: null, category: 'business' },
@@ -94,6 +103,11 @@ class PronunciationQuest {
                 { word: 'questionnaire', transcription: '/ˌkwestʃəˈneə/', stress: 3, audio: null, category: 'research' },
                 { word: 'restaurant', transcription: '/ˈrestrɒnt/', stress: 1, audio: null, category: 'places' },
                 { word: 'throughout', transcription: '/θruːˈaʊt/', stress: 2, audio: null, category: 'prepositions' }
+                ,{ word: 'analysis', transcription: '/əˈnæləsɪs/', stress: 2, audio: null, category: 'science' }
+                ,{ word: 'capacity', transcription: '/kəˈpæsəti/', stress: 2, audio: null, category: 'general' }
+                ,{ word: 'diversity', transcription: '/daɪˈvɜːsəti/', stress: 2, audio: null, category: 'society' }
+                ,{ word: 'efficient', transcription: '/ɪˈfɪʃnt/', stress: 2, audio: null, category: 'adjectives' }
+                ,{ word: 'heritage', transcription: '/ˈherɪtɪdʒ/', stress: 1, audio: null, category: 'culture' }
             ],
             advanced: [
                 { word: 'worcestershire', transcription: '/ˈwʊstəʃə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/worcestershire.mp3', category: 'places' },
@@ -135,6 +149,11 @@ class PronunciationQuest {
                 { word: 'xylophone', transcription: '/ˈzaɪləfəʊn/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/xylophone.mp3', category: 'music' },
                 { word: 'yoghurt', transcription: '/ˈjɒɡət/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/yoghurt.mp3', category: 'food' },
                 { word: 'zeitgeist', transcription: '/ˈzaɪtɡaɪst/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/zeitgeist.mp3', category: 'culture' }
+                ,{ word: 'miscellaneous', transcription: '/ˌmɪsəˈleɪniəs/', stress: 3, audio: null, category: 'general' }
+                ,{ word: 'philanthropy', transcription: '/fɪˈlænθrəpi/', stress: 2, audio: null, category: 'society' }
+                ,{ word: 'quintessential', transcription: '/ˌkwɪntɪˈsenʃl/', stress: 3, audio: null, category: 'description' }
+                ,{ word: 'ubiquitous', transcription: '/juːˈbɪkwɪtəs/', stress: 2, audio: null, category: 'adjectives' }
+                ,{ word: 'whistleblower', transcription: '/ˈwɪslˌbləʊə/', stress: 1, audio: null, category: 'politics' }
             ]
         };
 
@@ -344,6 +363,12 @@ class PronunciationQuest {
                 }
             });
         }
+
+        // Події для режиму карток
+        document.getElementById('back-from-flashcards-btn')?.addEventListener('click', () => this.showMainMenu());
+        document.getElementById('flashcard-play-btn')?.addEventListener('click', () => this.playAudio());
+        document.getElementById('flashcard-reveal-btn')?.addEventListener('click', () => this.revealFlashcardInfo());
+        document.getElementById('flashcard-next-btn')?.addEventListener('click', () => this.nextFlashcard());
     }
 
     changeLevel(level) {
@@ -1204,6 +1229,7 @@ class PronunciationQuest {
         const gameArea = document.querySelector('.game-area');
         const phoneticsZoneElement = document.getElementById('phonetics-zone');
         const tongueTwistersSection = document.getElementById('tongue-twisters-section');
+        const flashcardsSection = document.getElementById('flashcards-section');
         
         // Видаляємо активний стан з усіх кнопок режимів
         document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -1222,6 +1248,9 @@ class PronunciationQuest {
         phoneticsZoneElement.style.display = 'none';
         if (tongueTwistersSection) {
             tongueTwistersSection.style.display = 'none';
+        }
+        if (flashcardsSection) {
+            flashcardsSection.style.display = 'none';
         }
         
         if (mode === 'quiz') {
@@ -1261,6 +1290,16 @@ class PronunciationQuest {
                 if (!this.tongueTwistersInitialized) {
                     this.initTongueTwisters();
                     this.tongueTwistersInitialized = true;
+                }
+            }
+        } else if (mode === 'flashcards') {
+            if (flashcardsSection) {
+                flashcardsSection.style.display = 'block';
+                if (!this.flashcardsInitialized) {
+                    this.initFlashcards();
+                    this.flashcardsInitialized = true;
+                } else {
+                    this.displayFlashcard();
                 }
             }
         } else if (mode === 'main-menu') {
@@ -1800,10 +1839,43 @@ class PronunciationQuest {
             console.log("Команда на повільне відтворення надіслана");
         } catch (error) {
             console.error("Помилка повільного відтворення через Web Speech API:", error);
-            
+
             // При помилці переходимо до візуального режиму
             this.showTongueTwisterVisually(currentTwister.text, true); // true для повільного режиму
         }
+    }
+
+    // --- Flashcards mode ---
+    initFlashcards() {
+        this.flashcardIndex = 0;
+        this.displayFlashcard();
+    }
+
+    displayFlashcard() {
+        const words = this.words[this.currentLevel];
+        if (this.flashcardIndex >= words.length) {
+            this.flashcardIndex = 0;
+        }
+
+        const wordItem = words[this.flashcardIndex];
+        this.currentWord = wordItem;
+
+        document.getElementById('flashcard-word').textContent = wordItem.word;
+        document.getElementById('flashcard-transcription').textContent = wordItem.transcription;
+        document.getElementById('flashcard-stress').textContent = `${wordItem.stress}-й склад`;
+        document.getElementById('flashcard-info').style.display = 'none';
+
+        this.loadAudioForCurrentWord();
+        this.synthesizeAudio();
+    }
+
+    revealFlashcardInfo() {
+        document.getElementById('flashcard-info').style.display = 'block';
+    }
+
+    nextFlashcard() {
+        this.flashcardIndex++;
+        this.displayFlashcard();
     }
 
     // Новий метод для показу головного меню
@@ -1812,6 +1884,7 @@ class PronunciationQuest {
         document.querySelector('.game-area').style.display = 'none';
         document.getElementById('phonetics-zone').style.display = 'none';
         document.getElementById('tongue-twisters-section').style.display = 'none';
+        document.getElementById('flashcards-section').style.display = 'none';
         
         // Показуємо головне меню
         const mainMenu = document.getElementById('main-menu');
