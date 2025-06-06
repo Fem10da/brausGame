@@ -518,17 +518,24 @@ class PronunciationQuest {
             console.log("Спроба відтворення аудіо:", this.currentWord.audio);
 
             let audioStarted = false;
+            let didFallback = false;
 
-            const handlePlaying = () => {
+            const handleStart = () => {
                 audioStarted = true;
                 clearTimeout(audioTimeout);
-                if (this.synthesis.speaking) {
+                if (didFallback && this.synthesis.speaking) {
                     this.synthesis.cancel();
                 }
             };
 
             const handleError = (error) => {
                 console.error('Помилка відтворення аудіо:', error);
+                fallback();
+            };
+
+            const fallback = () => {
+                if (didFallback || audioStarted) return;
+                didFallback = true;
                 cleanup();
                 if (this.currentWord.audio === this.currentWord.audioPath) {
                     console.log("Помилка з локальним аудіо, спробуємо Web Speech API");
@@ -537,35 +544,23 @@ class PronunciationQuest {
                 this.fallbackToSynthesizedAudio();
             };
 
-            const handleTimeout = () => {
-                if (!audioStarted) {
-                    console.warn("Аудіо не почало відтворюватися вчасно, використовуємо Web Speech API");
-                    cleanup();
-                    this.fallbackToSynthesizedAudio();
-                }
-            };
-
             const cleanup = () => {
                 audio.onplaying = null;
-                audio.onplay = null;
+                audio.oncanplaythrough = null;
                 audio.onended = null;
                 audio.onerror = null;
-                audio.pause();
-                audio.src = '';
                 clearTimeout(audioTimeout);
             };
 
             audio.src = this.currentWord.audio;
             audio.playbackRate = this.playbackSpeed;
 
-            audio.onplaying = handlePlaying;
-            audio.onplay = handlePlaying;
-            audio.onended = () => {
-                console.log("Відтворення аудіо завершено");
-            };
+            audio.onplaying = handleStart;
+            audio.oncanplaythrough = handleStart;
+            audio.onended = () => console.log("Відтворення аудіо завершено");
             audio.onerror = handleError;
 
-            const audioTimeout = setTimeout(handleTimeout, 5000);
+            const audioTimeout = setTimeout(fallback, 4000);
 
             audio.play().catch(handleError);
         } else {
