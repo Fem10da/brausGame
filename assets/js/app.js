@@ -519,6 +519,7 @@ class PronunciationQuest {
 
             let audioStarted = false;
             let didFallback = false;
+            let audioTimeout;
 
             const handleStart = () => {
                 audioStarted = true;
@@ -550,6 +551,9 @@ class PronunciationQuest {
                 audio.onended = null;
                 audio.onerror = null;
                 clearTimeout(audioTimeout);
+                audio.pause();
+                audio.removeAttribute('src');
+                audio.load();
             };
 
             audio.src = this.currentWord.audio;
@@ -560,7 +564,7 @@ class PronunciationQuest {
             audio.onended = () => console.log("Відтворення аудіо завершено");
             audio.onerror = handleError;
 
-            const audioTimeout = setTimeout(fallback, 4000);
+            audioTimeout = setTimeout(fallback, 4000);
 
             audio.play().catch(handleError);
         } else {
