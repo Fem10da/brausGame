@@ -51,6 +51,15 @@ git clone https://github.com/yourusername/pronunciation-quest.git
 
 Або просто [відвідайте гру онлайн](https://fem10da.github.io/brausGame/)
 
+## 🧪 Тестування
+
+Запустіть unit-тести за допомогою команди:
+
+```bash
+npm test
+```
+
+
 ## 🌐 Вимоги до браузера
 
 - Сучасні браузери (Chrome, Firefox, Edge, Safari)
