@@ -1404,6 +1404,54 @@ body {
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* --- Flashcards --- */
+.flashcards-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    animation: fade-in 0.5s ease-out;
+}
+
+.flashcard-container {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.flashcard-word {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.flashcard-info {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+}
+
+.flashcard-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.flashcard-btn {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.flashcard-btn:hover {
+    background: linear-gradient(135deg, #2980b9, #1c6ea4);
+}
+
 @media (max-width: 768px) {
     .menu-buttons {
         flex-direction: column;
