@@ -180,6 +180,29 @@ class PronunciationQuest {
         this.preloadAudioForCurrentLevel();
     }
 
+    // Метод для перевірки існування файлу
+    async checkFileExists(url) {
+        try {
+            const response = await fetch(url, { method: 'HEAD' });
+            
+            // Перевіряємо статус відповіді та розмір файлу
+            if (response.ok) {
+                const contentLength = response.headers.get('content-length');
+                // Якщо файл існує але має розмір 0, вважаємо його неіснуючим
+                if (contentLength && parseInt(contentLength) === 0) {
+                    console.warn(`📁 Файл існує але порожній: ${url}`);
+                    return false;
+                }
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.warn(`📁 Не вдалося перевірити існування файлу ${url}:`, error.message);
+            return false;
+        }
+    }
+
     // Додаємо новий метод для попереднього завантаження аудіо
     async preloadAudioForCurrentLevel() {
         this.isLoadingAudio = true;
@@ -199,37 +222,46 @@ class PronunciationQuest {
             for (const wordItem of wordsForLevel) {
                 if (wordItem.audioPath) {
                     try {
-                        // Створюємо аудіо елемент для перевірки наявності файлу
+                        // Спочатку перевіряємо, чи файл існує через fetch HEAD запит
+                        const fileExists = await this.checkFileExists(wordItem.audioPath);
+                        
+                        if (!fileExists) {
+                            console.warn(`📁 Файл не існує: ${wordItem.audioPath}`);
+                            wordsWithoutLocalAudio.push(wordItem.word);
+                            continue;
+                        }
+                        
+                        // Створюємо аудіо елемент для перевірки завантаження
                         const audioElement = new Audio(wordItem.audioPath);
                         
                         // Використовуємо проміс для перевірки завантаження
                         await new Promise((resolve, reject) => {
                             audioElement.oncanplaythrough = () => {
-                                console.log(`Локальне аудіо для "${wordItem.word}" завантажено успішно`);
+                                console.log(`✅ Локальне аудіо для "${wordItem.word}" завантажено успішно`);
                                 wordItem.audio = wordItem.audioPath;
                                 resolve();
                             };
                             
-                            audioElement.onerror = () => {
-                                console.warn(`Локальне аудіо для "${wordItem.word}" не знайдено`);
+                            audioElement.onerror = (error) => {
+                                console.warn(`❌ Локальне аудіо для "${wordItem.word}" не може бути відтворено:`, error);
                                 wordsWithoutLocalAudio.push(wordItem.word);
                                 resolve(); // Ми все одно продовжуємо процес
                             };
                             
-                            // Обробляємо випадок, коли аудіо не може бути завантажене протягом 5 секунд
+                            // Обробляємо випадок, коли аудіо не може бути завантажене протягом 3 секунд
                             setTimeout(() => {
                                 if (!wordItem.audio) {
-                                    console.warn(`Таймаут завантаження аудіо для "${wordItem.word}"`);
+                                    console.warn(`⏱️ Таймаут завантаження аудіо для "${wordItem.word}"`);
                                     wordsWithoutLocalAudio.push(wordItem.word);
                                     resolve();
                                 }
-                            }, 5000);
+                            }, 3000);
                             
                             // Починаємо завантаження
                             audioElement.load();
                         });
                     } catch (error) {
-                        console.error(`Помилка перевірки локального аудіо для "${wordItem.word}":`, error);
+                        console.error(`❌ Помилка перевірки локального аудіо для "${wordItem.word}":`, error);
                         wordsWithoutLocalAudio.push(wordItem.word);
                     }
                 } else {
@@ -485,34 +517,41 @@ class PronunciationQuest {
             if (this.currentWord.audioPath) {
                 console.log(`🔍 Перевірка локального аудіо: ${this.currentWord.audioPath}`);
                 
-                const audioElement = new Audio(this.currentWord.audioPath);
+                // Спочатку перевіряємо, чи файл існує
+                const fileExists = await this.checkFileExists(this.currentWord.audioPath);
                 
-                // Використовуємо промис для перевірки завантаження
-                const localAudioLoaded = await new Promise((resolve) => {
-                    const timeout = setTimeout(() => {
-                        console.warn(`⏱️ Таймаут локального аудіо (2сек): ${this.currentWord.audioPath}`);
-                        resolve(false);
-                    }, 2000);
+                if (!fileExists) {
+                    console.warn(`📁 Файл не існує або порожній: ${this.currentWord.audioPath}`);
+                } else {
+                    const audioElement = new Audio(this.currentWord.audioPath);
                     
-                    audioElement.oncanplaythrough = () => {
-                        clearTimeout(timeout);
-                        console.log(`✅ Локальне аудіо завантажено успішно`);
-                        resolve(true);
-                    };
+                    // Використовуємо промис для перевірки завантаження
+                    const localAudioLoaded = await new Promise((resolve) => {
+                        const timeout = setTimeout(() => {
+                            console.warn(`⏱️ Таймаут локального аудіо (2сек): ${this.currentWord.audioPath}`);
+                            resolve(false);
+                        }, 2000);
+                        
+                        audioElement.oncanplaythrough = () => {
+                            clearTimeout(timeout);
+                            console.log(`✅ Локальне аудіо завантажено успішно`);
+                            resolve(true);
+                        };
+                        
+                        audioElement.onerror = (error) => {
+                            clearTimeout(timeout);
+                            console.warn(`❌ Локальне аудіо не може бути відтворено:`, error);
+                            resolve(false);
+                        };
+                        
+                        audioElement.load();
+                    });
                     
-                    audioElement.onerror = (error) => {
-                        clearTimeout(timeout);
-                        console.warn(`❌ Локальне аудіо не знайдено:`, error);
-                        resolve(false);
-                    };
-                    
-                    audioElement.load();
-                });
-                
-                if (localAudioLoaded && this.currentWord.word === wordToLoad) {
-                    this.currentWord.audio = this.currentWord.audioPath;
-                    console.log(`✅ Використовуємо локальне аудіо для "${wordToLoad}"`);
-                    return;
+                    if (localAudioLoaded && this.currentWord.word === wordToLoad) {
+                        this.currentWord.audio = this.currentWord.audioPath;
+                        console.log(`✅ Використовуємо локальне аудіо для "${wordToLoad}"`);
+                        return;
+                    }
                 }
             }
             
@@ -2360,19 +2399,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load voices when available
     function loadVoices() {
         const voices = window.speechSynthesis.getVoices();
+        console.log(`🎤 loadVoices викликано, знайдено ${voices.length} голосів, гра існує: ${!!window.game}`);
+        
         if (voices.length > 0 && !window.game) {
             // Start the game only if it hasn't been created yet
+            console.log("🎮 Створюємо новий екземпляр гри...");
             window.game = new PronunciationQuest();
             
             // Виводимо повідомлення для діагностики проблеми з варіантами
-            console.log("Гру ініціалізовано!");
+            console.log("✅ Гру ініціалізовано!");
             setTimeout(() => {
                 const options = document.getElementById('options');
                 console.log("Варіанти відповіді:", options?.children.length || 0);
             }, 1000);
         } else if (voices.length === 0) {
             // Try again only if voices aren't loaded yet
+            console.log("🔄 Голоси ще не завантажені, спробуємо знову...");
             setTimeout(loadVoices, 100);
+        } else if (window.game) {
+            console.log("🎮 Гра вже існує, пропускаємо ініціалізацію");
         }
     }
 
