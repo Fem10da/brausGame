@@ -2,6 +2,7 @@
 import audioLoader from './audio-loader.js';
 import phoneticsZone from './phonetics-zone.js';
 import tongueTwistersData from './tongue-twisters.js';
+import customWordsManager from './custom-words.js';
 
 class PronunciationQuest {
     constructor() {
@@ -25,10 +26,20 @@ class PronunciationQuest {
         
         // Додаємо прапорець, що блокує збереження прогресу після скидання
         this.blockProgressSaving = false;
+        
+        // Додаємо прапорець для блокування швидкої зміни слів
+        this.isLoadingWord = false;
+        
+        // Додаємо прапорець для блокування швидкого перемикання тем
+        this.isTogglingTheme = false;
 
         // Індекс для режиму карток
         this.flashcardIndex = 0;
         this.flashcardsInitialized = false;
+        
+        // Власні слова
+        this.customWords = [];
+        this.customWordsInitialized = false;
         
         this.words = {
             beginner: [
@@ -112,7 +123,7 @@ class PronunciationQuest {
             advanced: [
                 { word: 'worcestershire', transcription: '/ˈwʊstəʃə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/worcestershire.mp3', category: 'places' },
                 { word: 'gloucestershire', transcription: '/ˈɡlɒstəʃə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/gloucestershire.mp3', category: 'places' },
-                { word: 'lieutenant', transcription: '/lefˈtenənt/', stress: 2, audio: null, audioPath: 'assets/audio/words/advanced/lieutenant.mp3', category: 'military' },
+                { word: 'lieutenant', transcription: '/lefˈtenənt/', stress: 2, audio: null, category: 'military' },
                 { word: 'quay', transcription: '/kiː/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/quay.mp3', category: 'maritime' },
                 { word: 'choir', transcription: '/ˈkwaɪə/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/choir.mp3', category: 'music' },
                 { word: 'colonel', transcription: '/ˈkɜːnəl/', stress: 1, audio: null, audioPath: 'assets/audio/words/advanced/colonel.mp3', category: 'military' },
@@ -162,6 +173,7 @@ class PronunciationQuest {
 
         this.initializeGame();
         this.bindEvents();
+        this.initThemeToggle();
         this.loadWord();
         
         // Попереднє завантаження аудіофайлів для поточного рівня
@@ -178,7 +190,7 @@ class PronunciationQuest {
         
         try {
             // Витягуємо список слів для поточного рівня
-            const wordsForLevel = this.words[this.currentLevel];
+            const wordsForLevel = this.getCurrentLevelWords();
             
             // Перевіряємо наявність локальних аудіофайлів
             const wordsWithoutLocalAudio = [];
@@ -322,9 +334,12 @@ class PronunciationQuest {
     }
 
     bindEvents() {
-        // Обробники подій для головного меню
-        document.querySelectorAll('.menu-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.switchMode(e.target.closest('.menu-btn').dataset.mode));
+        // Обробники подій для головного меню (оновлено для карток)
+        document.querySelectorAll('.menu-card').forEach(card => {
+            card.addEventListener('click', async (e) => {
+                const mode = e.target.closest('.menu-card').dataset.mode;
+                await this.switchMode(mode);
+            });
         });
 
         // Кнопки повернення до головного меню
@@ -334,7 +349,7 @@ class PronunciationQuest {
 
         // Level selector
         document.querySelectorAll('.level-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.changeLevel(e.target.dataset.level));
+            btn.addEventListener('click', async (e) => await this.changeLevel(e.target.dataset.level));
         });
 
         // Audio controls
@@ -346,7 +361,7 @@ class PronunciationQuest {
         });
 
         // Next button
-        document.getElementById('next-btn').addEventListener('click', () => this.nextWord());
+        document.getElementById('next-btn').addEventListener('click', async () => await this.nextWord());
         
         // Інформаційна кнопка
         const infoButton = document.getElementById('info-button');
@@ -369,9 +384,12 @@ class PronunciationQuest {
         document.getElementById('flashcard-play-btn')?.addEventListener('click', () => this.playAudio());
         document.getElementById('flashcard-reveal-btn')?.addEventListener('click', () => this.revealFlashcardInfo());
         document.getElementById('flashcard-next-btn')?.addEventListener('click', () => this.nextFlashcard());
+        
+        // Події для власних слів
+        document.getElementById('back-from-custom-words-btn')?.addEventListener('click', () => this.showMainMenu());
     }
 
-    changeLevel(level) {
+    async changeLevel(level) {
         if (this.isLoadingAudio) return; // Запобігаємо зміні рівня під час завантаження
         
         this.currentLevel = level;
@@ -384,7 +402,7 @@ class PronunciationQuest {
         // Завантажуємо аудіо для нового рівня
         this.preloadAudioForCurrentLevel();
         
-        this.loadWord();
+        await this.loadWord();
         
         // Зберігаємо прогрес тільки якщо немає блокування
         if (!this.blockProgressSaving) {
@@ -392,65 +410,134 @@ class PronunciationQuest {
         }
     }
 
-    loadWord() {
-        const words = this.words[this.currentLevel];
-        if (this.currentWordIndex >= words.length) {
-            this.currentWordIndex = 0;
-            this.levelUp();
+    async loadWord() {
+        // Блокуємо швидку зміну слів
+        if (this.isLoadingWord) {
+            console.log("Слово вже завантажується, пропускаємо запит");
+            return;
         }
+        
+        this.isLoadingWord = true;
+        
+        try {
+            const words = this.getCurrentLevelWords();
+            if (this.currentWordIndex >= words.length) {
+                this.currentWordIndex = 0;
+                this.levelUp();
+            }
 
-        const currentWord = words[this.currentWordIndex];
-        this.currentWord = currentWord;
+            const currentWord = words[this.currentWordIndex];
+            this.currentWord = currentWord;
+            
+            console.log(`Завантаження слова "${currentWord.word}" (індекс: ${this.currentWordIndex})`);
 
-        // Choose random task type
-        this.currentTaskType = this.taskTypes[Math.floor(Math.random() * this.taskTypes.length)];
-        
-        this.displayWord();
-        this.generateOptions();
-        this.updateProgress();
-        
-        // Clear previous feedback
-        this.hideFeedback();
-        document.getElementById('next-btn').disabled = true;
-        
-        // Перевіряємо наявність локального аудіо шляху
-        if (this.currentWord.audioPath) {
-            console.log("Для слова знайдено локальний аудіошлях:", this.currentWord.audioPath);
+            // Choose random task type
+            this.currentTaskType = this.taskTypes[Math.floor(Math.random() * this.taskTypes.length)];
             
-            // Створюємо аудіо елемент для перевірки файлу
-            const audioElement = new Audio(this.currentWord.audioPath);
+            // Show loading indicator
+            this.showLoadingIndicator();
             
-            // Встановлюємо обробник для успішного завантаження
-            audioElement.oncanplaythrough = () => {
-                console.log("Локальне аудіо для", this.currentWord.word, "завантажено успішно");
-                this.currentWord.audio = this.currentWord.audioPath;
-            };
+            // Clear previous feedback
+            this.hideFeedback();
+            document.getElementById('next-btn').disabled = true;
             
-            // Встановлюємо обробник для помилки
-            audioElement.onerror = () => {
-                console.warn("Локальне аудіо для", this.currentWord.word, "не знайдено, використовуємо API");
-                this.loadAudioForCurrentWord();
-            };
+            // Load audio first, then display word
+            await this.loadAudioForCurrentWord();
             
-            // Починаємо завантаження (це не відтворює звук)
-            audioElement.load();
-        } else {
-            // Якщо для слова немає локального аудіо, спробуємо завантажити з API
-            this.loadAudioForCurrentWord();
+            // Перевіряємо, чи слово не змінилося під час завантаження
+            if (this.currentWord.word === currentWord.word) {
+                // Only display word after audio is loaded or failed
+                this.displayWord();
+                this.generateOptions();
+                this.updateProgress();
+                
+                console.log(`Слово "${currentWord.word}" успішно завантажено з аудіо:`, !!this.currentWord.audio);
+            } else {
+                console.log(`Слово змінилося під час завантаження. Старе: "${currentWord.word}", нове: "${this.currentWord.word}"`);
+            }
+            
+            // Hide loading indicator
+            this.hideLoadingIndicator();
+        } catch (error) {
+            console.error('Помилка завантаження слова:', error);
+            this.hideLoadingIndicator();
+        } finally {
+            this.isLoadingWord = false;
         }
     }
 
-    // Додаємо новий метод для завантаження аудіо для поточного слова
+    // Завантажує аудіо для поточного слова з гарантією синхронізації
     async loadAudioForCurrentWord() {
-        if (!this.currentWord.audio) {
-            try {
-                const audioUrl = await audioLoader.getAudioUrl(this.currentWord.word);
-                if (audioUrl) {
-                    this.currentWord.audio = audioUrl;
-                }
-            } catch (error) {
-                console.error(`Помилка завантаження аудіо для "${this.currentWord.word}":`, error);
+        const wordToLoad = this.currentWord.word;
+        const startTime = performance.now();
+        console.log(`🔊 Завантаження аудіо для слова: "${wordToLoad}"`);
+        
+        try {
+            // Спочатку перевіряємо кеш AudioLoader
+            const cachedUrl = audioLoader.getCachedAudioUrl(wordToLoad);
+            if (cachedUrl) {
+                console.log(`✅ Аудіо знайдено в кеші: ${cachedUrl}`);
+                this.currentWord.audio = cachedUrl;
+                return;
             }
+            
+            // Перевіряємо наявність локального аудіо шляху
+            if (this.currentWord.audioPath) {
+                console.log(`🔍 Перевірка локального аудіо: ${this.currentWord.audioPath}`);
+                
+                const audioElement = new Audio(this.currentWord.audioPath);
+                
+                // Використовуємо промис для перевірки завантаження
+                const localAudioLoaded = await new Promise((resolve) => {
+                    const timeout = setTimeout(() => {
+                        console.warn(`⏱️ Таймаут локального аудіо (2сек): ${this.currentWord.audioPath}`);
+                        resolve(false);
+                    }, 2000);
+                    
+                    audioElement.oncanplaythrough = () => {
+                        clearTimeout(timeout);
+                        console.log(`✅ Локальне аудіо завантажено успішно`);
+                        resolve(true);
+                    };
+                    
+                    audioElement.onerror = (error) => {
+                        clearTimeout(timeout);
+                        console.warn(`❌ Локальне аудіо не знайдено:`, error);
+                        resolve(false);
+                    };
+                    
+                    audioElement.load();
+                });
+                
+                if (localAudioLoaded && this.currentWord.word === wordToLoad) {
+                    this.currentWord.audio = this.currentWord.audioPath;
+                    console.log(`✅ Використовуємо локальне аудіо для "${wordToLoad}"`);
+                    return;
+                }
+            }
+            
+            // Якщо локального аудіо немає або воно не завантажилось, використовуємо API
+            if (!this.currentWord.audio && this.currentWord.word === wordToLoad) {
+                console.log(`🌐 Завантаження аудіо з API для "${wordToLoad}"`);
+                const audioUrl = await audioLoader.getAudioUrl(wordToLoad);
+                
+                // Перевіряємо, чи все ще актуальне це слово
+                if (this.currentWord.word === wordToLoad) {
+                    if (audioUrl) {
+                        this.currentWord.audio = audioUrl;
+                        console.log(`✅ Аудіо з API завантажено успішно для "${wordToLoad}"`);
+                    } else {
+                        console.log(`🎤 Аудіо з API не знайдено для "${wordToLoad}", використовуємо синтез`);
+                    }
+                } else {
+                    console.log(`⚠️ Слово змінилось під час завантаження API. Очікувалося: "${wordToLoad}", поточне: "${this.currentWord.word}"`);
+                }
+            }
+        } catch (error) {
+            console.error(`❌ Помилка завантаження аудіо для "${wordToLoad}":`, error);
+        } finally {
+            const endTime = performance.now();
+            console.log(`⏱️ Завантаження аудіо для "${wordToLoad}" зайняло ${Math.round(endTime - startTime)}мс`);
         }
     }
 
@@ -491,6 +578,43 @@ class PronunciationQuest {
         console.log("Task type:", this.currentTaskType);
     }
 
+    showLoadingIndicator() {
+        const gameContent = document.querySelector('.game-content');
+        if (gameContent) {
+            gameContent.style.opacity = '0.5';
+            gameContent.style.pointerEvents = 'none';
+        }
+        
+        let loadingIndicator = document.getElementById('loading-indicator');
+        if (!loadingIndicator) {
+            loadingIndicator = document.createElement('div');
+            loadingIndicator.id = 'loading-indicator';
+            loadingIndicator.className = 'loading-indicator';
+            loadingIndicator.innerHTML = `
+                <div class="spinner"></div>
+                <p>Завантаження слова...</p>
+            `;
+            const gameArea = document.querySelector('.game-area');
+            if (gameArea) {
+                gameArea.appendChild(loadingIndicator);
+            }
+        }
+        loadingIndicator.style.display = 'flex';
+    }
+
+    hideLoadingIndicator() {
+        const gameContent = document.querySelector('.game-content');
+        if (gameContent) {
+            gameContent.style.opacity = '1';
+            gameContent.style.pointerEvents = 'auto';
+        }
+        
+        const loadingIndicator = document.getElementById('loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+    }
+
     synthesizeAudio() {
         // Create synthetic audio using Web Speech API як запасний варіант
         const utterance = new SpeechSynthesisUtterance(this.currentWord.word);
@@ -512,10 +636,14 @@ class PronunciationQuest {
 
     playAudio() {
         const audio = document.getElementById('word-audio');
+        
+        console.log(`🎵 Відтворення аудіо для слова: "${this.currentWord.word}"`);
+        console.log(`🎵 Доступне аудіо: ${this.currentWord.audio ? 'Так' : 'Ні'}`);
+        console.log(`🎵 Швидкість відтворення: ${this.playbackSpeed}x`);
 
         // Якщо доступне реальне аудіо, спершу намагаємося відтворити його
         if (this.currentWord.audio) {
-            console.log("Спроба відтворення аудіо:", this.currentWord.audio);
+            console.log(`🎵 Спроба відтворення аудіо: ${this.currentWord.audio}`);
 
             audio.src = this.currentWord.audio;
             audio.playbackRate = this.playbackSpeed;
@@ -530,15 +658,15 @@ class PronunciationQuest {
 
             audio.onplaying = handlePlaying;
             audio.onplay = () => {
-                console.log("Аудіо почало відтворюватися");
+                console.log("✅ Аудіо почало відтворюватися");
             };
             audio.onended = () => {
-                console.log("Відтворення аудіо завершено");
+                console.log("✅ Відтворення аудіо завершено");
             };
             audio.onerror = (error) => {
-                console.error('Помилка відтворення аудіо:', error);
+                console.error('❌ Помилка відтворення аудіо:', error);
                 if (this.currentWord.audio === this.currentWord.audioPath) {
-                    console.log("Помилка з локальним аудіо, спробуємо Web Speech API");
+                    console.log("🔄 Помилка з локальним аудіо, спробуємо Web Speech API");
                     this.currentWord.audio = null;
                 }
                 clearTimeout(audioTimeout);
@@ -548,27 +676,43 @@ class PronunciationQuest {
             // Якщо аудіо не почало відтворюватися протягом 3 секунд, використовуємо синтезований голос
             const audioTimeout = setTimeout(() => {
                 if (audio.paused) {
-                    console.warn("Аудіо не почало відтворюватися протягом 3 секунд");
+                    console.warn("⏰ Аудіо не почало відтворюватися протягом 3 секунд, переходимо до синтезу");
                     this.fallbackToSynthesizedAudio();
                 }
             }, 3000);
 
             audio.play().catch(error => {
-                console.error('Помилка відтворення аудіо:', error);
+                console.error('❌ Помилка відтворення аудіо:', error);
                 clearTimeout(audioTimeout);
                 this.fallbackToSynthesizedAudio();
             });
         } else {
             // В іншому випадку одразу використовуємо синтезований голос
+            console.log("🎤 Немає доступного аудіо, використовуємо синтез");
             this.fallbackToSynthesizedAudio();
         }
     }
 
     fallbackToSynthesizedAudio() {
         // Використовуємо Web Speech API для синтезу голосу
+        console.log(`🎤 Використовуємо синтезований голос для "${this.currentWord.word}"`);
         if (this.synthesis.speaking) {
             this.synthesis.cancel();
         }
+        
+        // Додаємо обробники подій для синтезу
+        this.currentUtterance.onstart = () => {
+            console.log("✅ Синтез мовлення розпочато");
+        };
+        
+        this.currentUtterance.onend = () => {
+            console.log("✅ Синтез мовлення завершено");
+        };
+        
+        this.currentUtterance.onerror = (error) => {
+            console.error("❌ Помилка синтезу мовлення:", error);
+        };
+        
         this.synthesis.speak(this.currentUtterance);
     }
 
@@ -950,14 +1094,14 @@ class PronunciationQuest {
         feedback.className = 'feedback';
     }
 
-    nextWord() {
+    async nextWord() {
         this.currentWordIndex++;
-        this.loadWord();
+        await this.loadWord();
     }
 
     updateProgress() {
         const progressFill = document.getElementById('progress-fill');
-        const words = this.words[this.currentLevel];
+        const words = this.getCurrentLevelWords();
         const progressPercentage = (this.currentWordIndex / words.length) * 100;
         progressFill.style.width = `${progressPercentage}%`;
     }
@@ -1225,12 +1369,13 @@ class PronunciationQuest {
     }
 
     // Додаємо метод для перемикання режимів (оновлений)
-    switchMode(mode) {
+    async switchMode(mode) {
         const mainMenu = document.getElementById('main-menu');
         const gameArea = document.querySelector('.game-area');
         const phoneticsZoneElement = document.getElementById('phonetics-zone');
         const tongueTwistersSection = document.getElementById('tongue-twisters-section');
         const flashcardsSection = document.getElementById('flashcards-section');
+        const customWordsSection = document.getElementById('custom-words-section');
         
         // Видаляємо активний стан з усіх кнопок режимів
         document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -1253,6 +1398,9 @@ class PronunciationQuest {
         if (flashcardsSection) {
             flashcardsSection.style.display = 'none';
         }
+        if (customWordsSection) {
+            customWordsSection.style.display = 'none';
+        }
         
         if (mode === 'quiz') {
             // Показуємо ігрову зону (режим квізу)
@@ -1263,7 +1411,7 @@ class PronunciationQuest {
             
             // Завантажуємо перше слово
             this.currentWordIndex = 0;
-            this.loadWord();
+            await this.loadWord();
         } else if (mode === 'learn') {
             // Показуємо фонетичну зону
             phoneticsZoneElement.style.display = 'block';
@@ -1303,6 +1451,17 @@ class PronunciationQuest {
                     this.displayFlashcard();
                 }
             }
+        } else if (mode === 'custom-words') {
+            if (customWordsSection) {
+                customWordsSection.style.display = 'block';
+                if (!this.customWordsInitialized) {
+                    customWordsManager.init();
+                    this.customWordsInitialized = true;
+                    
+                    // Завантажуємо поділені підбірки з URL
+                    customWordsManager.loadSharedCollection();
+                }
+            }
         } else if (mode === 'main-menu') {
             // Показуємо головне меню
             mainMenu.style.display = 'flex';
@@ -1319,8 +1478,12 @@ class PronunciationQuest {
 
     // Новий метод для перемішування слів поточного рівня
     shuffleWordsForCurrentLevel() {
-        const wordsForLevel = this.words[this.currentLevel];
-        this.words[this.currentLevel] = this.shuffleArray([...wordsForLevel]);
+        if (this.currentLevel === 'custom' && this.customWords.length > 0) {
+            this.customWords = this.shuffleArray([...this.customWords]);
+        } else {
+            const wordsForLevel = this.words[this.currentLevel];
+            this.words[this.currentLevel] = this.shuffleArray([...wordsForLevel]);
+        }
         console.log(`Слова для рівня ${this.currentLevel} перемішані`);
     }
 
@@ -1853,7 +2016,7 @@ class PronunciationQuest {
     }
 
     displayFlashcard() {
-        const words = this.words[this.currentLevel];
+        const words = this.getCurrentLevelWords();
         if (this.flashcardIndex >= words.length) {
             this.flashcardIndex = 0;
         }
@@ -1886,6 +2049,9 @@ class PronunciationQuest {
         document.getElementById('phonetics-zone').style.display = 'none';
         document.getElementById('tongue-twisters-section').style.display = 'none';
         document.getElementById('flashcards-section').style.display = 'none';
+        if (document.getElementById('custom-words-section')) {
+            document.getElementById('custom-words-section').style.display = 'none';
+        }
         
         // Показуємо головне меню
         const mainMenu = document.getElementById('main-menu');
@@ -2036,16 +2202,16 @@ class PronunciationQuest {
     }
     
     // Додаємо новий метод для повного відновлення стану гри
-    resetGameState() {
+    async resetGameState() {
         // Скидаємо рівень складності
-        this.changeLevel('beginner');
+        await this.changeLevel('beginner');
         
         // Перемішуємо слова для свіжого початку
         this.shuffleWordsForCurrentLevel();
         
         // Скидаємо слово до першого
         this.currentWordIndex = 0;
-        this.loadWord();
+        await this.loadWord();
         
         // Скидаємо налаштування швидкості
         this.playbackSpeed = 1.0;
@@ -2056,6 +2222,112 @@ class PronunciationQuest {
         
         console.log('Стан гри повністю відновлено');
     }
+
+    // Theme management methods
+    initThemeToggle() {
+        // Перевіряємо, чи не ініціалізовано вже перемикач тем
+        if (window.themeToggleInitialized) {
+            console.log('Theme toggle already initialized, skipping');
+            return;
+        }
+        
+        // Load saved theme preference
+        const savedTheme = localStorage.getItem('pronunciation-quest-theme') || 'light';
+        this.applyTheme(savedTheme);
+        
+        // Bind theme toggle event with delay to ensure DOM is ready
+        setTimeout(() => {
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            if (themeToggleBtn) {
+                // Видаляємо попередні обробники, щоб уникнути дублювання
+                themeToggleBtn.removeEventListener('click', this.boundToggleTheme);
+                
+                // Створюємо bound функцію для можливості її видалення
+                this.boundToggleTheme = () => {
+                    this.toggleTheme();
+                };
+                
+                themeToggleBtn.addEventListener('click', this.boundToggleTheme);
+                
+                // Позначаємо, що перемикач тем ініціалізовано
+                window.themeToggleInitialized = true;
+                console.log('Theme toggle initialized successfully');
+            } else {
+                console.error('Theme toggle button not found');
+            }
+        }, 100);
+    }
+
+    toggleTheme() {
+        // Запобігаємо одночасним викликам
+        if (this.isTogglingTheme) {
+            console.log('Theme toggle already in progress, skipping');
+            return;
+        }
+        
+        this.isTogglingTheme = true;
+        
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        this.applyTheme(newTheme);
+        
+        // Save theme preference
+        localStorage.setItem('pronunciation-quest-theme', newTheme);
+        
+        // Відновлюємо можливість перемикання через короткий час
+        setTimeout(() => {
+            this.isTogglingTheme = false;
+        }, 200);
+    }
+
+    applyTheme(theme) {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        
+        // Уникаємо непотрібних змін
+        if (currentTheme === theme) {
+            console.log(`Theme already set to: ${theme}`);
+            return;
+        }
+        
+        console.log(`🎨 Changing theme from "${currentTheme}" to "${theme}"`);
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        // Update toggle button
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+        
+        if (themeIcon && themeText) {
+            if (theme === 'dark') {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Світла тема';
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Темна тема';
+            }
+            console.log(`🎨 Theme UI updated: icon="${themeIcon.textContent}", text="${themeText.textContent}"`);
+        } else {
+            console.warn('🎨 Theme button elements not found');
+        }
+        
+        console.log(`✅ Theme successfully changed to: ${theme}`);
+    }
+
+    // Метод для завантаження кастомних слів
+    loadCustomWords(customWords) {
+        this.customWords = customWords;
+        this.words.custom = customWords;
+        this.currentLevel = 'custom';
+        console.log(`Loaded ${customWords.length} custom words`);
+    }
+
+    // Метод для отримання слів поточного рівня
+    getCurrentLevelWords() {
+        if (this.currentLevel === 'custom' && this.customWords.length > 0) {
+            return this.customWords;
+        }
+        return this.words[this.currentLevel] || [];
+    }
+
 }
 
 // Додаємо індикатор завантаження до DOM при запуску
@@ -2088,8 +2360,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load voices when available
     function loadVoices() {
         const voices = window.speechSynthesis.getVoices();
-        if (voices.length > 0) {
-            // Start the game
+        if (voices.length > 0 && !window.game) {
+            // Start the game only if it hasn't been created yet
             window.game = new PronunciationQuest();
             
             // Виводимо повідомлення для діагностики проблеми з варіантами
@@ -2098,8 +2370,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const options = document.getElementById('options');
                 console.log("Варіанти відповіді:", options?.children.length || 0);
             }, 1000);
-        } else {
-            // Try again
+        } else if (voices.length === 0) {
+            // Try again only if voices aren't loaded yet
             setTimeout(loadVoices, 100);
         }
     }

@@ -17,6 +17,10 @@
     
     <div class="container">
         <div class="header">
+                    <button class="theme-toggle-btn" id="theme-toggle-btn">
+            <span class="theme-icon" id="theme-icon">🌙</span>
+            <span class="theme-text" id="theme-text">Темна тема</span>
+        </button>
             <h1>🇬🇧 Pronunciation Quest</h1>
             <p class="subtitle">Вивчайте британську вимову через гру!</p>
             <div class="stats">
@@ -37,28 +41,33 @@
         <!-- Нове головне меню -->
         <div id="main-menu" class="main-menu">
             <h2>Виберіть режим</h2>
-            <div class="menu-buttons">
-                <button class="menu-btn quiz-btn" data-mode="quiz">
+            <div class="menu-grid">
+                <div class="menu-card quiz-card" data-mode="quiz">
                     <div class="menu-icon">🎯</div>
-                    <div class="menu-btn-text">Квіз</div>
-                    <div class="menu-btn-desc">Перевірте знання вимови слів</div>
-                </button>
-                <button class="menu-btn learn-btn" data-mode="learn">
+                    <h3>Квіз</h3>
+                    <p>Перевірте знання вимови слів</p>
+                </div>
+                <div class="menu-card learn-card" data-mode="learn">
                     <div class="menu-icon">📚</div>
-                    <div class="menu-btn-text">Вивчення</div>
-                    <div class="menu-btn-desc">Вивчайте фонетичні символи</div>
-                </button>
-                <button class="menu-btn twister-btn" data-mode="tongue-twisters">
+                    <h3>Вивчення</h3>
+                    <p>Вивчайте фонетичні символи</p>
+                </div>
+                <div class="menu-card pronunciation-card" data-mode="tongue-twisters">
                     <div class="menu-icon">🗣️</div>
-                    <div class="menu-btn-text">Скоромовки</div>
-                    <div class="menu-btn-desc">Тренуйте вимову зі скоромовками</div>
-                </button>
-                <button class="menu-btn flashcard-btn" data-mode="flashcards">
-                    <div class="menu-icon">🃏</div>
-                    <div class="menu-btn-text">Картки</div>
-                    <div class="menu-btn-desc">Запам'ятовуйте нові слова</div>
-                </button>
+                    <h3>Тренуйте вимову зі скоромовками</h3>
+                </div>
+                <div class="menu-card flashcards-card" data-mode="flashcards">
+                    <div class="menu-icon">🎴</div>
+                    <h3>Картки</h3>
+                    <p>Заучуйте слова із картками</p>
+                </div>
+                <div class="menu-card custom-words-card" data-mode="custom-words">
+                    <div class="menu-icon">📝</div>
+                    <h3>Власні слова</h3>
+                    <p>Завантажте та вивчайте власні підбірки</p>
+                </div>
             </div>
+            <button id="reset-progress-btn" class="reset-btn">🔄 Скинути прогрес</button>
         </div>
 
         <!-- Ігрова зона (квіз) -->
@@ -188,6 +197,66 @@
             </div>
         </div>
 
+        <!-- Секція власних слів -->
+        <div id="custom-words-section" class="custom-words-section" style="display: none;">
+            <div class="back-navigation">
+                <button id="back-from-custom-words-btn" class="back-btn">← Повернутися до меню</button>
+            </div>
+            <h2 class="section-title">📝 Власні слова</h2>
+            
+            <div class="custom-words-tabs">
+                <button class="tab-btn active" data-tab="upload">Завантажити</button>
+                <button class="tab-btn" data-tab="collections">Мої підбірки</button>
+                <button class="tab-btn" data-tab="shared">Поділитись</button>
+            </div>
+
+            <!-- Завантаження слів -->
+            <div id="upload-tab" class="tab-content active">
+                <div class="upload-area">
+                    <h3>Завантажте власні слова</h3>
+                    <p>Додайте слова у форматі: слово,транскрипція,переклад (кожне слово з нового рядка)</p>
+                    
+                    <div class="file-upload">
+                        <input type="file" id="words-file-input" accept=".txt,.csv" style="display: none;">
+                        <button class="upload-btn" onclick="document.getElementById('words-file-input').click()">
+                            📁 Завантажити файл
+                        </button>
+                    </div>
+                    
+                    <div class="text-input">
+                        <textarea id="words-text-input" placeholder="Або введіть слова тут:
+apple,/ˈæpl/,яблуко
+banana,/bəˈnɑːnə/,банан
+cat,/kæt/,кіт"></textarea>
+                        <button class="parse-btn" id="parse-words-btn">✨ Додати слова</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Мої підбірки -->
+            <div id="collections-tab" class="tab-content">
+                <div class="collections-list" id="collections-list">
+                    <p>У вас поки немає власних підбірок</p>
+                </div>
+            </div>
+
+            <!-- Поділитись -->
+            <div id="shared-tab" class="tab-content">
+                <div class="sharing-section">
+                    <h3>Поділіться підбіркою</h3>
+                    <p>Створіть посилання для поділу вашої підбірки</p>
+                    <select id="collection-select">
+                        <option value="">Оберіть підбірку</option>
+                    </select>
+                    <button class="share-btn" id="generate-share-link">🔗 Створити посилання</button>
+                    <div id="share-result" style="display: none;">
+                        <input type="text" id="share-link" readonly>
+                        <button class="copy-btn" id="copy-link-btn">📋 Копіювати</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="info-panel" class="info-panel">
             <h3>Як користуватися Pronunciation Quest</h3>
             <p>Ця гра допоможе вам покращити вимову англійських слів, зосереджуючись на особливостях британської вимови.</p>
@@ -226,6 +295,7 @@
     </div>
 
     <script type="module" src="./assets/js/debug.js"></script>
+    <script type="module" src="./assets/js/custom-words.js"></script>
     <script type="module" src="./assets/js/app.js"></script>
 </body>
 </html> 
