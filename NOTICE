@@ -1,0 +1,108 @@
+Pronunciation Quest - Interactive British Pronunciation Learning Game
+Copyright 2024 Pronunciation Quest Project
+
+This product includes software developed for Ukrainian speakers learning 
+British English pronunciation.
+
+===============================================================================
+
+THIRD-PARTY SOFTWARE AND RESOURCES:
+
+This software uses the following external resources:
+
+1. Free Dictionary API (https://dictionaryapi.dev/)
+   - Provides pronunciation audio for British English words
+   - Used under their terms of service for educational purposes
+
+2. Web Speech API
+   - Browser-native speech synthesis for fallback pronunciation
+   - Used for accessibility and offline functionality
+
+3. Modern JavaScript ES6+ Features
+   - Async/await, modules, classes for clean architecture
+   - Progressive enhancement for broad browser support
+
+===============================================================================
+
+EDUCATIONAL METHODOLOGY:
+
+The pronunciation learning methodology implemented in this software includes:
+
+- British English phonetic categorization system
+- Progressive difficulty levels (A2-B1, B1-B2, B2-C1)
+- Interactive feedback mechanisms
+- Spaced repetition principles for vocabulary retention
+- Audio-visual learning integration
+
+===============================================================================
+
+UKRAINIAN LANGUAGE SUPPORT:
+
+This software specifically serves the Ukrainian-speaking community with:
+
+- Ukrainian language interface and explanations
+- Cultural context for English pronunciation challenges
+- Educational materials tailored for Ukrainian speakers
+- Community-driven content and improvements
+
+===============================================================================
+
+TECHNICAL INNOVATIONS:
+
+Key technical contributions of this project include:
+
+1. Smart Audio Loading System
+   - Rate-limiting protection with exponential backoff
+   - Batch processing with dynamic preloading
+   - Intelligent caching and fallback mechanisms
+
+2. Accessibility Features
+   - Screen reader compatibility
+   - Keyboard navigation support
+   - High contrast theme options
+   - Mobile-first responsive design
+
+3. Custom Word Management
+   - CSV/TXT import functionality
+   - Shareable collection URLs
+   - Local storage with data persistence
+
+===============================================================================
+
+ATTRIBUTION REQUIREMENTS:
+
+When using, modifying, or distributing this software:
+
+1. Retain this NOTICE file in all copies
+2. Include attribution to "Pronunciation Quest" in user-facing materials
+3. Provide link to original repository: https://github.com/fem10da/brausGame
+4. Credit the educational methodology for Ukrainian language learners
+5. Acknowledge the smart audio loading system if used independently
+
+===============================================================================
+
+COMMUNITY CONTRIBUTIONS:
+
+Special recognition to contributors who support the educational mission:
+
+- Open source community for code reviews and improvements
+- Ukrainian educators for content validation
+- Language learning researchers for methodology guidance
+- Beta testers for usability feedback
+
+For current list of contributors, see: 
+https://github.com/fem10da/brausGame/graphs/contributors
+
+===============================================================================
+
+EDUCATIONAL PARTNERSHIPS:
+
+This project welcomes collaboration with:
+- Ukrainian educational institutions
+- English language schools and programs  
+- Open source educational technology projects
+- Language learning research initiatives
+
+Contact: Through GitHub issues at https://github.com/fem10da/brausGame/issues
+
+=============================================================================== 
