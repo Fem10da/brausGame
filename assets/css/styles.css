@@ -176,6 +176,71 @@ body {
     transform: translateX(100%);
 }
 
+/* API Status Indicator */
+.api-status {
+    text-align: center;
+    margin: 15px 0;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    animation: fade-in 0.3s ease;
+}
+
+.api-status.hidden {
+    display: none;
+}
+
+.api-status.rate-limited {
+    background: #ffe6e6;
+    color: #d32f2f;
+    border: 1px solid #ffcdd2;
+}
+
+.api-status.loading {
+    background: #fff3e0;
+    color: #f57c00;
+    border: 1px solid #ffcc02;
+}
+
+.api-status.active {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.api-status.error {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+/* Dark theme API status */
+[data-theme="dark"] .api-status.rate-limited {
+    background: #3f1a1a;
+    color: #f48fb1;
+    border: 1px solid #5c2e2e;
+}
+
+[data-theme="dark"] .api-status.loading {
+    background: #3f2a1a;
+    color: #ffb74d;
+    border: 1px solid #5c3a1a;
+}
+
+[data-theme="dark"] .api-status.active {
+    background: #1a3f1a;
+    color: #81c784;
+    border: 1px solid #2e5c2e;
+}
+
+[data-theme="dark"] .api-status.error {
+    background: #3f1a1a;
+    color: #ef5350;
+    border: 1px solid #5c2e2e;
+}
+
 .game-area {
     background: var(--bg-secondary);
     border-radius: 20px;

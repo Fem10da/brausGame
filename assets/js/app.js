@@ -211,6 +211,9 @@ class PronunciationQuest {
             loadingIndicator.style.display = 'block';
         }
         
+        // Показуємо статус завантаження
+        this.updateApiStatus('loading');
+        
         try {
             // Витягуємо список слів для поточного рівня
             const wordsForLevel = this.getCurrentLevelWords();
@@ -271,14 +274,18 @@ class PronunciationQuest {
             
             console.log("Слова без локального аудіо:", wordsWithoutLocalAudio);
             
-            // Якщо є слова без локального аудіо, спробуємо завантажити їх через API
+            // Замість завантаження всіх слів одразу, використовуємо smart preloading
             if (wordsWithoutLocalAudio.length > 0 && this.currentLevel !== 'advanced') {
-                console.log("Завантаження аудіо через API для", wordsWithoutLocalAudio.length, "слів");
+                console.log(`🎯 Запуск smart preloading для ${wordsWithoutLocalAudio.length} слів`);
                 
-                // Використовуємо AudioLoader для завантаження аудіо тільки для слів без локальних файлів
-                await audioLoader.preloadAudioForWords(wordsWithoutLocalAudio);
+                // Завантажуємо тільки перші 5 слів для початку
+                const initialPreloadCount = Math.min(5, wordsWithoutLocalAudio.length);
+                console.log(`📡 Попереднє завантаження ${initialPreloadCount} слів для початку гри`);
                 
-                // Оновлюємо аудіо для кожного слова
+                // Використовуємо smart preloading з меншим batch size
+                await audioLoader.smartPreloadAudio(wordsWithoutLocalAudio, 0, initialPreloadCount);
+                
+                // Оновлюємо аудіо для завантажених слів
                 wordsForLevel.forEach(wordItem => {
                     if (!wordItem.audio) {
                         const audioUrl = audioLoader.getCachedAudioUrl(wordItem.word);
@@ -287,6 +294,13 @@ class PronunciationQuest {
                         }
                     }
                 });
+                
+                console.log(`✅ Початкове завантаження завершено. Решта слів буде завантажена в фоновому режимі.`);
+                
+                // Запускаємо фонове завантаження решти слів
+                if (wordsWithoutLocalAudio.length > initialPreloadCount) {
+                    this.startBackgroundPreloading(wordsWithoutLocalAudio, initialPreloadCount);
+                }
             } else if (this.currentLevel === 'advanced') {
                 console.log("Рівень advanced: завантаження через API пропущено, щоб уникнути CORS помилок");
             }
@@ -302,12 +316,60 @@ class PronunciationQuest {
             }
         } catch (error) {
             console.error('Помилка при завантаженні аудіо:', error);
+            this.updateApiStatus('error');
         } finally {
             this.isLoadingAudio = false;
             if (loadingIndicator) {
                 loadingIndicator.style.display = 'none';
             }
+            
+            // Показуємо успішний статус якщо не було помилок
+            if (!this.apiStatusElement.classList.contains('error')) {
+                this.updateApiStatus('active');
+            }
         }
+    }
+
+    // Додаємо новий метод для фонового завантаження
+    async startBackgroundPreloading(wordList, startIndex) {
+        console.log(`🔄 Початок фонового завантаження з індексу ${startIndex}`);
+        
+        // Використовуємо setTimeout для того, щоб не блокувати UI
+        setTimeout(async () => {
+            try {
+                const remainingWords = wordList.slice(startIndex);
+                const batchSize = 3; // Невеликий batch size для фонового завантаження
+                
+                for (let i = 0; i < remainingWords.length; i += batchSize) {
+                    const batch = remainingWords.slice(i, i + batchSize);
+                    
+                    console.log(`🔄 Фонове завантаження batch ${Math.floor(i / batchSize) + 1}: ${batch.length} слів`);
+                    
+                    // Завантажуємо batch з більшою затримкою між запитами
+                    await audioLoader.preloadAudioForWords(batch, 1);
+                    
+                    // Оновлюємо аудіо для завантажених слів
+                    const wordsForLevel = this.getCurrentLevelWords();
+                    wordsForLevel.forEach(wordItem => {
+                        if (!wordItem.audio) {
+                            const audioUrl = audioLoader.getCachedAudioUrl(wordItem.word);
+                            if (audioUrl) {
+                                wordItem.audio = audioUrl;
+                            }
+                        }
+                    });
+                    
+                    // Більша пауза між фоновими batch-ами
+                    if (i + batchSize < remainingWords.length) {
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                    }
+                }
+                
+                console.log(`✅ Фонове завантаження завершено для ${remainingWords.length} слів`);
+            } catch (error) {
+                console.error('Помилка фонового завантаження:', error);
+            }
+        }, 2000); // Затримка 2 секунди перед початком фонового завантаження
     }
 
     initializeGame() {
@@ -319,8 +381,67 @@ class PronunciationQuest {
         this.loadProgress();
         this.updateUI();
         
+        // Ініціалізуємо API статус індикатор
+        this.initApiStatusIndicator();
+        
         // Показуємо головне меню при ініціалізації
         this.showMainMenu();
+    }
+
+    // Додаємо метод для ініціалізації API статус індикатора
+    initApiStatusIndicator() {
+        this.apiStatusElement = document.getElementById('api-status');
+        this.apiStatusText = document.getElementById('api-status-text');
+        this.updateApiStatus('hidden');
+        
+        // Встановлюємо callback для аудіо завантажувача
+        audioLoader.setStatusCallback((status, message) => {
+            this.updateApiStatus(status, message);
+        });
+    }
+
+    // Метод для оновлення статусу API
+    updateApiStatus(status, message = null) {
+        if (!this.apiStatusElement) return;
+
+        // Очищаємо всі класи статусу
+        this.apiStatusElement.classList.remove('hidden', 'rate-limited', 'loading', 'active', 'error');
+        
+        // Додаємо новий клас статусу
+        this.apiStatusElement.classList.add(status);
+        
+        // Оновлюємо текст
+        if (message) {
+            this.apiStatusText.textContent = message;
+        } else {
+            switch (status) {
+                case 'rate-limited':
+                    this.apiStatusText.textContent = '⏳ Rate limit активний - очікуємо...';
+                    break;
+                case 'loading':
+                    this.apiStatusText.textContent = '📡 Завантаження аудіо...';
+                    break;
+                case 'active':
+                    this.apiStatusText.textContent = '✅ API активний';
+                    break;
+                case 'error':
+                    this.apiStatusText.textContent = '❌ Помилка API - використовуємо синтез';
+                    break;
+                case 'hidden':
+                default:
+                    this.apiStatusText.textContent = '';
+                    break;
+            }
+        }
+        
+        // Автоматично приховуємо статус через 5 секунд для success статусів
+        if (status === 'active') {
+            setTimeout(() => {
+                if (this.apiStatusElement.classList.contains('active')) {
+                    this.updateApiStatus('hidden');
+                }
+            }, 5000);
+        }
     }
     
     // Метод для перевірки підтримки Web Speech API
@@ -558,18 +679,30 @@ class PronunciationQuest {
             // Якщо локального аудіо немає або воно не завантажилось, використовуємо API
             if (!this.currentWord.audio && this.currentWord.word === wordToLoad) {
                 console.log(`🌐 Завантаження аудіо з API для "${wordToLoad}"`);
-                const audioUrl = await audioLoader.getAudioUrl(wordToLoad);
                 
-                // Перевіряємо, чи все ще актуальне це слово
-                if (this.currentWord.word === wordToLoad) {
-                    if (audioUrl) {
-                        this.currentWord.audio = audioUrl;
-                        console.log(`✅ Аудіо з API завантажено успішно для "${wordToLoad}"`);
+                try {
+                    const audioUrl = await audioLoader.getAudioUrl(wordToLoad);
+                    
+                    // Перевіряємо, чи все ще актуальне це слово
+                    if (this.currentWord.word === wordToLoad) {
+                        if (audioUrl) {
+                            this.currentWord.audio = audioUrl;
+                            console.log(`✅ Аудіо з API завантажено успішно для "${wordToLoad}"`);
+                        } else {
+                            console.log(`🎤 Аудіо з API не знайдено для "${wordToLoad}", буде використано синтез мови`);
+                            // Встановлюємо спеціальний маркер для синтезу мови
+                            this.currentWord.audio = 'synthesized';
+                        }
                     } else {
-                        console.log(`🎤 Аудіо з API не знайдено для "${wordToLoad}", використовуємо синтез`);
+                        console.log(`⚠️ Слово змінилось під час завантаження API. Очікувалося: "${wordToLoad}", поточне: "${this.currentWord.word}"`);
                     }
-                } else {
-                    console.log(`⚠️ Слово змінилось під час завантаження API. Очікувалося: "${wordToLoad}", поточне: "${this.currentWord.word}"`);
+                } catch (error) {
+                    console.error(`❌ Критична помилка завантаження аудіо для "${wordToLoad}":`, error);
+                    // При критичній помилці також використовуємо синтез
+                    if (this.currentWord.word === wordToLoad) {
+                        this.currentWord.audio = 'synthesized';
+                        console.log(`🎤 Використовуємо синтез мови для "${wordToLoad}" через помилку API`);
+                    }
                 }
             }
         } catch (error) {
@@ -682,6 +815,13 @@ class PronunciationQuest {
 
         // Якщо доступне реальне аудіо, спершу намагаємося відтворити його
         if (this.currentWord.audio) {
+            // Перевіряємо, чи це маркер для синтезу мови
+            if (this.currentWord.audio === 'synthesized') {
+                console.log('🎤 Використовуємо синтез мови згідно маркера');
+                this.fallbackToSynthesizedAudio();
+                return;
+            }
+            
             console.log(`🎵 Спроба відтворення аудіо: ${this.currentWord.audio}`);
 
             audio.src = this.currentWord.audio;
@@ -1136,6 +1276,55 @@ class PronunciationQuest {
     async nextWord() {
         this.currentWordIndex++;
         await this.loadWord();
+        
+        // Динамічне завантаження наступних слів під час гри
+        this.preloadNextWords();
+    }
+
+    // Додаємо метод для динамічного завантаження наступних слів
+    async preloadNextWords() {
+        try {
+            const wordsForLevel = this.getCurrentLevelWords();
+            const wordsToPreload = [];
+            
+            // Завантажуємо наступні 3 слова, якщо вони ще не завантажені
+            for (let i = 1; i <= 3; i++) {
+                const nextIndex = this.currentWordIndex + i;
+                if (nextIndex < wordsForLevel.length) {
+                    const nextWord = wordsForLevel[nextIndex];
+                    if (!nextWord.audio && !nextWord.audioPath) {
+                        wordsToPreload.push(nextWord.word);
+                    }
+                }
+            }
+            
+            if (wordsToPreload.length > 0) {
+                console.log(`🎯 Динамічне завантаження ${wordsToPreload.length} наступних слів...`);
+                
+                // Завантажуємо в фоновому режимі без блокування UI
+                setTimeout(async () => {
+                    try {
+                        await audioLoader.preloadAudioForWords(wordsToPreload, 1);
+                        
+                        // Оновлюємо аудіо для завантажених слів
+                        wordsForLevel.forEach(wordItem => {
+                            if (!wordItem.audio) {
+                                const audioUrl = audioLoader.getCachedAudioUrl(wordItem.word);
+                                if (audioUrl) {
+                                    wordItem.audio = audioUrl;
+                                }
+                            }
+                        });
+                        
+                        console.log(`✅ Динамічне завантаження завершено для ${wordsToPreload.length} слів`);
+                    } catch (error) {
+                        console.error('Помилка динамічного завантаження:', error);
+                    }
+                }, 500); // Невелика затримка щоб не заважати поточному завантаженню
+            }
+        } catch (error) {
+            console.error('Помилка при динамічному завантаженні:', error);
+        }
     }
 
     updateProgress() {

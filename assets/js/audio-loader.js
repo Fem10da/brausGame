@@ -1,32 +1,48 @@
 class AudioLoader {
     constructor() {
         this.cache = new Map();
+        this.loadingWords = new Set();
         this.baseUrl = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
-        this.retryCount = 2;
-        this.retryDelay = 1000; // 1 секунда
-        this.loadingWords = new Set(); // Для відслідковування завантажень, що відбуваються
+        this.retryCount = 3;
+        this.retryDelay = 1000; // Збільшили базову затримку
+        this.rateLimited = false;
+        this.rateLimitResetTime = 0;
+        this.statusCallback = null; // Callback для оновлення статусу
+    }
+
+    // Метод для встановлення callback функції для оновлення статусу
+    setStatusCallback(callback) {
+        this.statusCallback = callback;
+    }
+
+    // Метод для відправки статусу через callback
+    reportStatus(status, message = null) {
+        if (this.statusCallback) {
+            this.statusCallback(status, message);
+        }
     }
 
     /**
-     * Завантажує аудіо для слова з підтримкою retry та кращою обробкою помилок
-     * @param {string} word - слово, для якого потрібне аудіо
-     * @returns {Promise<string|null>} - URL аудіо або null, якщо аудіо не знайдено
+     * Отримує URL аудіо для слова
+     * @param {string} word - слово для пошуку
+     * @returns {Promise<string|null>} - URL аудіо або null
      */
     async getAudioUrl(word) {
-        // Перевірка кешу
         if (this.cache.has(word)) {
             return this.cache.get(word);
         }
 
-        // Якщо слово вже завантажується, чекаємо
         if (this.loadingWords.has(word)) {
+            // Слово вже завантажується, чекаємо
             return new Promise((resolve) => {
                 const checkCache = () => {
                     if (this.cache.has(word)) {
                         resolve(this.cache.get(word));
                     } else if (!this.loadingWords.has(word)) {
+                        // Завантаження провалилось
                         resolve(null);
                     } else {
+                        // Все ще завантажується
                         setTimeout(checkCache, 100);
                     }
                 };
@@ -50,17 +66,25 @@ class AudioLoader {
     }
 
     /**
-     * Завантажує аудіо з retry логікою
+     * Завантажує аудіо з retry логікою та обробкою rate limiting
      * @param {string} word - слово
      * @returns {Promise<string|null>} - URL аудіо
      */
     async fetchAudioWithRetry(word) {
         let lastError;
         
+        // Перевіряємо, чи ми не в стані rate limit
+        if (this.rateLimited && Date.now() < this.rateLimitResetTime) {
+            const waitTime = this.rateLimitResetTime - Date.now();
+            console.warn(`⏱️ Rate limit активний. Очікування ${waitTime}мс перед запитом для "${word}"`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            this.rateLimited = false;
+        }
+        
         for (let attempt = 0; attempt <= this.retryCount; attempt++) {
             try {
                 const response = await fetch(`${this.baseUrl}${word}`, {
-                    timeout: 5000, // 5 секунд таймаут
+                    timeout: 5000,
                     signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined
                 });
 
@@ -69,6 +93,24 @@ class AudioLoader {
                         console.log(`Аудіо для "${word}" не знайдено в API`);
                         return null;
                     }
+                    
+                    // Обробляємо rate limiting
+                    if (response.status === 429) {
+                        console.warn(`🚫 Rate limit для "${word}". Встановлюємо затримку.`);
+                        this.rateLimited = true;
+                        this.rateLimitResetTime = Date.now() + (this.retryDelay * Math.pow(2, attempt));
+                        
+                        // Повідомляємо про rate limit
+                        this.reportStatus('rate-limited', `⏳ Rate limit: очікуємо ${Math.floor(this.retryDelay * Math.pow(2, attempt) / 1000)}с`);
+                        
+                        if (attempt < this.retryCount) {
+                            const waitTime = this.retryDelay * Math.pow(2, attempt);
+                            console.warn(`⏱️ Очікування ${waitTime}мс перед повторною спробою для "${word}"`);
+                            await new Promise(resolve => setTimeout(resolve, waitTime));
+                            continue;
+                        }
+                    }
+                    
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
@@ -94,7 +136,8 @@ class AudioLoader {
                 console.warn(`Спроба ${attempt + 1} завантажити аудіо для "${word}" не вдалась:`, error.message);
                 
                 if (attempt < this.retryCount) {
-                    await new Promise(resolve => setTimeout(resolve, this.retryDelay * (attempt + 1)));
+                    const waitTime = this.retryDelay * Math.pow(2, attempt); // Експоненціальна затримка
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
                 }
             }
         }
@@ -130,16 +173,16 @@ class AudioLoader {
     }
 
     /**
-     * Попередньо завантажує аудіо для списку слів з обмеженням паралельних запитів
+     * Попередньо завантажує аудіо для списку слів з покращеним rate limiting
      * @param {Array<string>} wordList - список слів
      * @param {number} batchSize - розмір пакету для одночасного завантаження
      * @returns {Promise<Map<string, string>>} - карта слово => URL аудіо
      */
-    async preloadAudioForWords(wordList, batchSize = 5) {
+    async preloadAudioForWords(wordList, batchSize = 2) { // Зменшили з 5 до 2
         const results = new Map();
         const uniqueWords = [...new Set(wordList)]; // Видаляємо дублікати
         
-        console.log(`Попереднє завантаження аудіо для ${uniqueWords.length} слів...`);
+        console.log(`Попереднє завантаження аудіо для ${uniqueWords.length} слів з batch size ${batchSize}...`);
         
         // Обробляємо слова пакетами для уникнення перевантаження API
         for (let i = 0; i < uniqueWords.length; i += batchSize) {
@@ -162,14 +205,41 @@ class AudioLoader {
             
             console.log(`Пакет ${Math.floor(i / batchSize) + 1}: ${successCount}/${batch.length} успішно завантажено`);
             
-            // Невелика пауза між пакетами для дружньої поведінки до API
+            // Збільшили паузу між пакетами для кращої поведінки до API
             if (i + batchSize < uniqueWords.length) {
-                await new Promise(resolve => setTimeout(resolve, 500));
+                const delayTime = this.rateLimited ? 2000 : 1000; // Більша затримка якщо rate limited
+                console.log(`⏱️ Пауза ${delayTime}мс між пакетами...`);
+                await new Promise(resolve => setTimeout(resolve, delayTime));
             }
         }
         
         console.log(`Завантаження завершено: ${results.size}/${uniqueWords.length} слів мають аудіо`);
         return results;
+    }
+
+    /**
+     * Завантажує аудіо тільки для наступних кількох слів (smart preloading)
+     * @param {Array<string>} wordList - повний список слів
+     * @param {number} currentIndex - поточний індекс слова
+     * @param {number} preloadCount - кількість слів для попереднього завантаження
+     * @returns {Promise<Map<string, string>>} - карта слово => URL аудіо
+     */
+    async smartPreloadAudio(wordList, currentIndex = 0, preloadCount = 5) {
+        const wordsToPreload = [];
+        
+        for (let i = 0; i < preloadCount && (currentIndex + i) < wordList.length; i++) {
+            const word = wordList[currentIndex + i];
+            if (!this.cache.has(word)) {
+                wordsToPreload.push(word);
+            }
+        }
+        
+        if (wordsToPreload.length > 0) {
+            console.log(`🎯 Smart preloading для ${wordsToPreload.length} слів починаючи з індексу ${currentIndex}`);
+            return await this.preloadAudioForWords(wordsToPreload, 1); // Batch size 1 для smart preloading
+        }
+        
+        return new Map();
     }
 
     /**
@@ -182,7 +252,7 @@ class AudioLoader {
     }
 
     /**
-     * Очищає кеш аудіо
+     * Очищує кеш аудіо
      * @param {string} [word] - конкретне слово для очищення, або весь кеш якщо не вказано
      */
     clearCache(word = null) {
@@ -210,7 +280,9 @@ class AudioLoader {
             wordsWithoutAudio,
             cacheHitRate: totalWords > 0 ? (wordsWithAudio / totalWords * 100).toFixed(2) + '%' : '0%',
             isLoading: this.loadingWords.size > 0,
-            currentlyLoading: Array.from(this.loadingWords)
+            currentlyLoading: Array.from(this.loadingWords),
+            rateLimited: this.rateLimited,
+            rateLimitResetTime: this.rateLimitResetTime
         };
     }
 
