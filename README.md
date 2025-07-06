@@ -2,7 +2,7 @@
 
 > Сучасна браузерна гра для українських користувачів, яка допомагає освоїти правильну британську вимову через цікаві завдання та інтерактивні режими навчання.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
 ![Language](https://img.shields.io/badge/language-JavaScript-yellow.svg)
 ![Status](https://img.shields.io/badge/status-Active-green.svg)
 
